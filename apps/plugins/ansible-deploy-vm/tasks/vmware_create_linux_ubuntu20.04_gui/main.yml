@@ -1,0 +1,99 @@
+---
+# Playbook: vmware_create_linux_ubuntu20.04_gui
+# Version: 1.0
+# Date: 2024-06-08
+# Author: blink-zero
+# Description: This playbook automates the deployment of a Ubuntu 20.04 virtual machine with a GUI.
+#              It includes steps for VM deployment, network configuration, GUI installation, and a final reboot.
+
+- name: Deploy Linux GUI Template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"       # vCenter server hostname
+    username: "{{ vcenter_username }}"       # vCenter server username
+    password: "{{ vcenter_password }}"       # vCenter server password
+    validate_certs: "{{ vcenter_validate_certs }}"  # Whether to validate SSL certificates
+    datacenter: "{{ vcenter_datacenter }}"   # Datacenter name
+    name: "{{ guest_hostname }}"             # Name of the new virtual machine
+    folder: "{{ vm_folder }}"                # Folder in which to create the VM
+    state: "{{ vm_state }}"                  # Desired state of the VM (present/absent)
+    guest_id: "{{ vm_guestid }}"             # Guest OS identifier
+    esxi_hostname: "{{ esxi_host }}"         # ESXi host on which to deploy the VM
+    template: "{{ template_name }}"          # Name of the template to use for the VM
+    disk:
+      - size_gb: "{{ lin_disk_size }}"       # Size of the VM disk in GB
+        type: "{{ vm_type }}"                # Disk type (thin/thick)
+        datastore: "{{ vm_disk_datastore }}" # Datastore for the VM disk
+    hardware:
+      memory_mb: "{{ guest_vram }}"          # Memory size in MB
+      num_cpus: "{{ guest_vcpu }}"           # Number of CPUs
+      scsi: "{{ vm_hw_scsi }}"               # SCSI controller type
+    networks:
+      - name: "{{ vm_net_name }}"            # Network name
+        ip: "{{ inventory_hostname }}"       # IP address of the VM
+        netmask: "{{ netmask }}"             # Network mask
+        gateway: "{{ gateway }}"             # Gateway address
+    customization:
+      dns_servers:
+        - "{{ dns1 }}"                       # Primary DNS server
+        - "{{ dns2 }}"                       # Secondary DNS server
+    wait_for_ip_address: True                # Wait for the IP address to be assigned
+  delegate_to: localhost
+
+- name: Add host to Ansible inventory
+  ansible.builtin.add_host:
+    hostname: '{{ inventory_hostname }}'           # Hostname of the new VM
+    ansible_user: '{{ linux_template_username }}'  # SSH username for the new VM
+    ansible_password: '{{ linux_template_password }}'  # SSH password for the new VM
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'  # SSH options
+
+- name: Debug - Check connectivity to the new host
+  wait_for:
+    host: '{{ inventory_hostname }}'         # Hostname to check
+    port: 22                                 # Port to check (SSH)
+    timeout: 30                              # Timeout in seconds
+
+- name: Wait for system to become reachable over SSH
+  wait_for_connection:
+    timeout: 900                             # Timeout in seconds
+    connect_timeout: 60                      # Connection timeout in seconds
+    sleep: 10                                # Sleep time between retries
+    delay: 0                                 # Initial delay
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Update package cache
+  become: true
+  apt:
+    update_cache: yes                        # Update the apt package cache
+  when: template_name.find("ubuntu") != -1   # Condition to run the task only for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: yes                             # Upgrade apt packages
+    update_cache: yes                        # Update the apt package cache
+    cache_valid_time: 86400                  # Cache validity time in seconds
+  when: template_name.find("ubuntu") != -1   # Condition to run the task only for Ubuntu
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Install GUI (Ubuntu) - gnome-shell
+  ansible.builtin.apt:
+    name: gnome-shell                        # Package name
+    state: present                           # Ensure the package is installed
+  when: template_name.find("ubuntu") != -1   # Condition to run the task only for Ubuntu
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Install GUI (Ubuntu) - ubuntu-desktop
+  ansible.builtin.apt:
+    name: ubuntu-desktop                     # Package name
+    state: present                           # Ensure the package is installed
+  when: template_name.find("ubuntu") != -1   # Condition to run the task only for Ubuntu
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Reboot machine
+  ansible.builtin.reboot:
+    msg: "Rebooting..."                      # Reboot message
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'

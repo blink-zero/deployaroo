@@ -1,0 +1,10 @@
+all:
+  children:
+    lin_client:
+      hosts:
+        172.16.0.98:
+          guest_hostname: testmachine01
+          guest_vcpu: '2'
+          guest_vram: '4096'
+          template_name: linux-ubuntu-20.04-lts-v23.01
+          vm_guestid: ubuntu64Guest

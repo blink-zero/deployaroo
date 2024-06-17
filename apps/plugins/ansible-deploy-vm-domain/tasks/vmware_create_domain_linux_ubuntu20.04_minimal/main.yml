@@ -1,0 +1,182 @@
+---
+# Playbook: vmware_create_domain_linux_ubuntu20.04_minimal
+# Version: 1.0
+# Date: 2024-06-08
+# Author: blink-zero
+# Description: This playbook automates the deployment of a Ubuntu 20.04 Minimal virtual machine template and joins it to an Active Directory domain.
+
+- name: Deploy Linux Domain Template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"       # vCenter server hostname
+    username: "{{ vcenter_username }}"       # vCenter server username
+    password: "{{ vcenter_password }}"       # vCenter server password
+    validate_certs: "{{ vcenter_validate_certs }}"  # Whether to validate SSL certificates
+    datacenter: "{{ vcenter_datacenter }}"   # Datacenter name
+    name: "{{ guest_hostname }}"             # Name of the new virtual machine
+    folder: "{{ vm_folder }}"                # Folder in which to create the VM
+    state: "{{ vm_state }}"                  # Desired state of the VM (present/absent)
+    guest_id: "{{ vm_guestid }}"             # Guest OS identifier
+    esxi_hostname: "{{ esxi_host }}"         # ESXi host on which to deploy the VM
+    template: "{{ template_name }}"          # Name of the template to use for the VM
+    disk:
+      - size_gb: "{{ lin_disk_size }}"       # Size of the VM disk in GB
+        type: "{{ vm_type }}"                # Disk type (thin/thick)
+        datastore: "{{ vm_disk_datastore }}" # Datastore for the VM disk
+    hardware:
+      memory_mb: "{{ guest_vram }}"          # Memory size in MB
+      num_cpus: "{{ guest_vcpu }}"           # Number of CPUs
+      scsi: "{{ vm_hw_scsi }}"               # SCSI controller type
+    networks:
+      - name: "{{ vm_net_name }}"            # Network name
+        ip: "{{ inventory_hostname }}"       # IP address of the VM
+        netmask: "{{ netmask }}"             # Network mask
+        gateway: "{{ gateway }}"             # Gateway address
+    customization:
+      domain: "{{ ad_domain }}"              # Active Directory domain to join
+      dns_servers:
+        - "{{ dns1 }}"                       # Primary DNS server
+        - "{{ dns2 }}"                       # Secondary DNS server
+      dns_suffix:
+        - "{{ ad_domain }}"                  # DNS suffix for the domain
+    wait_for_ip_address: True                # Wait for the IP address to be assigned
+  delegate_to: localhost
+  
+- name: Add host to Ansible inventory
+  ansible.builtin.add_host:
+    hostname: '{{ inventory_hostname }}'           # Hostname of the new VM
+    ansible_user: '{{ linux_template_username }}'  # SSH username for the new VM
+    ansible_password: '{{ linux_template_password }}'  # SSH password for the new VM
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'  # Always trust, don't store keys
+
+- name: Wait for system to become reachable over SSH
+  wait_for_connection:
+    timeout: 900                                   # Timeout in seconds
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Update package cache
+  become: true
+  apt:
+    update_cache: yes                              # Update the apt package cache
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu 18.04 - Install the required packages
+  apt:
+    name: realmd,sssd,adcli,krb5-user,sssd-tools,samba-common,packagekit,samba-common-bin,samba-libs,ntpdate,ntp,python3-pip  # Package names
+    state: present                                 # Ensure the packages are installed
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu-18.04") != -1   # Condition to run for Ubuntu 18.04
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu 20.04 - Install the required packages
+  apt:
+    name: realmd,sssd,adcli,krb5-user,sssd-tools,samba-common,packagekit,samba-common-bin,samba-libs,ntpdate,ntp,python3-pip  # Package names
+    state: present                                 # Ensure the packages are installed
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu-20.04") != -1   # Condition to run for Ubuntu 20.04
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu 22.04 - Install the required packages
+  apt:
+    name: realmd,sssd,adcli,krb5-user,sssd-tools,samba-common,packagekit,samba-common-bin,samba-libs,ntpdate,ntp,python3-pip  # Package names
+    state: present                                 # Ensure the packages are installed
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu-22.04") != -1   # Condition to run for Ubuntu 22.04
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Install pexpect using pip
+  pip:
+    name: pexpect                                  # Package name
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Copy realmd.conf
+  template: 
+    src: realmd.conf.j2                            # Source template
+    dest: /etc/realmd.conf                         # Destination path
+    owner: root                                    # Owner
+    group: root                                    # Group
+    mode: 0644                                     # Permissions
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Copy krb5.conf
+  template: 
+    src: krb5.conf.j2                              # Source template
+    dest: /etc/krb5.conf                           # Destination path
+    backup: yes                                    # Backup the original file
+    owner: root                                    # Owner
+    group: root                                    # Group
+    mode: 0644                                     # Permissions
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Create kerberos ticket
+  expect:
+    command: /bin/bash -c "/usr/bin/kinit -V {{ domain_join_username }}"  # Command to create Kerberos ticket
+    responses:
+      (?i)Password: "{{ domain_join_password }}"  # Provide password
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Join system to AD
+  expect:
+    command: /bin/bash -c "/usr/sbin/realm join {{ ad_domain }} --computer-ou='{{ ad_ubu_ou_membership }}' --user={{ domain_join_username }}"  # Command to join AD
+    responses:
+      (?i)Password: "{{ domain_join_password }}"  # Provide password
+  ignore_errors: yes                              # Ignore errors
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Add domain admins group to sudoers
+  lineinfile: 
+    dest: /etc/sudoers                             # Destination file
+    state: present                                 # Ensure the line is present
+    line: '%domain\ admins ALL=(ALL:ALL) ALL'      # Line to add
+    regexp: '^%domain'                             # Regular expression to match
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Copy sssd.conf
+  template:
+    src: sssd.conf.j2                              # Source template
+    dest: /etc/sssd/sssd.conf                      # Destination path
+    owner: root                                    # Owner
+    group: root                                    # Group
+    mode: 0600                                     # Permissions
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Copy pam common-session
+  template: 
+    src: common-session.j2                         # Source template
+    dest: /etc/pam.d/common-session                # Destination path
+    owner: root                                    # Owner
+    group: root                                    # Group
+    mode: 0644                                     # Permissions
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Restart realmd
+  service:
+    name: realmd                                   # Service name
+    state: restarted                               # Restart the service
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Ubuntu - Restart sssd
+  service:
+    name: sssd                                     # Service name
+    state: restarted                               # Restart the service
+  become: true                                     # Run as root
+  when: template_name.find("ubuntu") != -1         # Condition to run for Ubuntu
+  delegate_to: '{{ inventory_hostname }}'

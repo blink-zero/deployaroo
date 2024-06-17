@@ -1,0 +1,147 @@
+---
+# Playbook: vmware_create_linux_ubuntu22.04_developer
+# Version: 1.0
+# Date: 2024-06-08
+# Author: blink-zero
+# Description: This playbook automates the deployment of a Ubuntu 22.04 developer virtual machine.
+#              It includes steps for VM deployment, network configuration, installation of development tools, and GUI setup.
+
+- name: Deploy Linux Developer Template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"       # vCenter server hostname
+    username: "{{ vcenter_username }}"       # vCenter server username
+    password: "{{ vcenter_password }}"       # vCenter server password
+    validate_certs: "{{ vcenter_validate_certs }}"  # Whether to validate SSL certificates
+    datacenter: "{{ vcenter_datacenter }}"   # Datacenter name
+    name: "{{ guest_hostname }}"             # Name of the new virtual machine
+    folder: "{{ vm_folder }}"                # Folder in which to create the VM
+    state: "{{ vm_state }}"                  # Desired state of the VM (present/absent)
+    guest_id: "{{ vm_guestid }}"             # Guest OS identifier
+    esxi_hostname: "{{ esxi_host }}"         # ESXi host on which to deploy the VM
+    template: "{{ template_name }}"          # Name of the template to use for the VM
+    disk:
+      - size_gb: "{{ lin_disk_size }}"       # Size of the VM disk in GB
+        type: "{{ vm_type }}"                # Disk type (thin/thick)
+        datastore: "{{ vm_disk_datastore }}" # Datastore for the VM disk
+    hardware:
+      memory_mb: "{{ guest_vram }}"          # Memory size in MB
+      num_cpus: "{{ guest_vcpu }}"           # Number of CPUs
+      scsi: "{{ vm_hw_scsi }}"               # SCSI controller type
+    networks:
+      - name: "{{ vm_net_name }}"            # Network name
+        ip: "{{ inventory_hostname }}"       # IP address of the VM
+        netmask: "{{ netmask }}"             # Network mask
+        gateway: "{{ gateway }}"             # Gateway address
+    customization:
+      dns_servers:
+        - "{{ dns1 }}"                       # Primary DNS server
+        - "{{ dns2 }}"                       # Secondary DNS server
+    wait_for_ip_address: True                # Wait for the IP address to be assigned
+  delegate_to: localhost
+
+- name: Add host to Ansible inventory
+  ansible.builtin.add_host:
+    hostname: '{{ inventory_hostname }}'           # Hostname of the new VM
+    ansible_user: '{{ linux_template_username }}'  # SSH username for the new VM
+    ansible_password: '{{ linux_template_password }}'  # SSH password for the new VM
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'  # SSH options
+
+- name: Debug - Check connectivity to the new host
+  wait_for:
+    host: '{{ inventory_hostname }}'         # Hostname to check
+    port: 22                                 # Port to check (SSH)
+    timeout: 30                              # Timeout in seconds
+
+- name: Wait for system to become reachable over SSH
+  wait_for_connection:
+    timeout: 900                             # Timeout in seconds
+    connect_timeout: 60                      # Connection timeout in seconds
+    sleep: 10                                # Sleep time between retries
+    delay: 0                                 # Initial delay
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: yes                             # Upgrade apt packages
+    update_cache: yes                        # Update the apt package cache
+    cache_valid_time: 86400                  # Cache validity time in seconds
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install development tools and dependencies
+  apt:
+    pkg:
+      - build-essential
+      - git
+      - curl
+      - wget
+      - vim
+      - unzip
+      - python3-pip
+      - python3-venv
+      - openjdk-11-jdk
+      - nodejs
+      - npm
+      - docker.io
+      - docker-compose
+      - gparted
+    state: present                           # Ensure the packages are installed
+  become: yes                                # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install VS Code
+  apt_key:
+    url: https://packages.microsoft.com/keys/microsoft.asc  # URL of the VS Code GPG key
+    state: present                                         # Ensure the key is added
+  become: yes                                              # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Add VS Code repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"  # VS Code repository URL
+    state: present                                                                 # Ensure the repository is added
+  become: yes                                                                      # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install VS Code
+  apt:
+    name: code                                 # Package name
+    state: present                             # Ensure the package is installed
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install GUI - Ubuntu Desktop
+  apt:
+    name: ubuntu-desktop                       # Package name
+    state: present                             # Ensure the package is installed
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Reboot machine
+  reboot:
+    msg: "Rebooting..."                        # Reboot message
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Add user to Docker group
+  user:
+    name: "{{ linux_template_username }}"      # Username
+    groups: docker                             # Group to add the user to
+    append: yes                                # Append the user to the group
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install additional VS Code extensions
+  shell: |
+    su - {{ linux_template_username }} -c 'code --install-extension ms-python.python'
+    su - {{ linux_template_username }} -c 'code --install-extension ms-vscode.cpptools'
+    su - {{ linux_template_username }} -c 'code --install-extension ms-azuretools.vscode-docker'
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Setup Python virtual environment
+  shell: |
+    python3 -m venv /home/{{ linux_template_username }}/venv
+    chown -R {{ linux_template_username }}:{{ linux_template_username }} /home/{{ linux_template_username }}/venv
+  become: yes                                  # Run the task as root
+  delegate_to: '{{ inventory_hostname }}'

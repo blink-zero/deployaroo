@@ -1,0 +1,9 @@
+{
+    "image_template_name": "windows-desktop-10-pro-v23.01",
+    "image_human_name": "Windows 10 Pro Nozomi FactoryIO",
+    "image_type": "windows",
+    "ansible_match_name": "win_10pro_nozomi_factoryio",
+    "vmware_os_type": "windows9Server64Guest",
+    "image_icon_name": "windows.png",
+    "network_type": "ansible-deploy-vm"
+}

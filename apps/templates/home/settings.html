@@ -1,0 +1,64 @@
+{% extends "layouts/base.html" %}
+{% block title %} Settings {% endblock %}
+{% block content %}
+
+<!-- Link to the external CSS file -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+
+<div class="wrapper d-flex">
+    <div id="sidebar">{% include 'includes/sidebar.html' %}</div>
+    <div id="body" class="flex-grow-1 d-flex flex-column">
+        {% include 'includes/navbar.html' %}
+        <div class="content flex-grow-1 d-flex flex-column">
+            <div class="container-fluid">
+                <div class="page-title">
+                    <h3>Settings</h3>
+                </div>
+                <div class="box box-secondary">
+                    <div class="box-body">
+                        <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'general' %}active{% endif %}" id="general-tab" href="{{ url_for('settings_blueprint.settings_general') }}" role="tab">General</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'vmware' %}active{% endif %}" id="vmware-tab" href="{{ url_for('settings_blueprint.settings_vmware') }}" role="tab">VMware Configuration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'default_vm' %}active{% endif %}" id="default-vm-tab" href="{{ url_for('settings_blueprint.settings_default_vm') }}" role="tab">Default VM Settings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'users' %}active{% endif %}" id="users-tab" href="{{ url_for('settings_blueprint.settings_users') }}" role="tab">Users / Groups</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'backup' %}active{% endif %}" id="backup-tab" href="{{ url_for('settings_blueprint.settings_backup') }}" role="tab">Backup</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if active_tab == 'vm_images' %}active{% endif %}" id="vm-images-tab" href="{{ url_for('settings_blueprint.settings_vm_images') }}" role="tab">Virtual Machine Images</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="myTabContent">
+                            {% if active_tab == 'general' %}
+                                {% include 'home/settings/general_tab.html' %}
+                            {% elif active_tab == 'vmware' %}
+                                {% include 'home/settings/vmware_tab.html' %}
+                            {% elif active_tab == 'default_vm' %}
+                                {% include 'home/settings/default_vm_tab.html' %}
+                            {% elif active_tab == 'users' %}
+                                {% include 'home/settings/users_tab.html' %}
+                            {% elif active_tab == 'backup' %}
+                                {% include 'home/settings/backup_tab.html' %}
+                            {% elif active_tab == 'vm_images' %}
+                                {% include 'home/settings/vm_images_tab.html' %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+{% include 'includes/toastr.html' %}
+
+{% endblock content %}

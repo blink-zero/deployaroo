@@ -1,0 +1,79 @@
+<div class="wrapper">
+  <nav id="sidebar" class="bg-custom-sidebar text-white d-flex flex-column">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <a href="/home">
+        <img src="/static/logo/deployaroo_text_white.png" class="app-logo" width="100px" height="40px" alt="Logo"/>
+      </a>
+    </div>
+    
+    <!-- Sidebar Content -->
+    <ul class="list-unstyled components flex-grow-1">
+      <!-- Home -->
+      <li>
+        <a href="/home" class="text-white"><i class="fas fa-home"></i> Home</a>
+      </li>
+      
+      <!-- Non-Domain -->
+      {% set non_domain_active = 'show' if request.path.startswith('/view_non_domain_item') else '' %}
+      <li>
+        <a href="#nondomainmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if non_domain_active else 'false' }}" class="dropdown-toggle text-white no-caret-down">
+          <i class="fas fa-caret-down"></i> Non-Domain
+        </a>
+        <ul class="collapse list-unstyled {{ non_domain_active }}" id="nondomainmenu">
+          <li>
+            <a href="{{ url_for('home_blueprint.add_network_nondomain') }}" class="text-white">
+              <i class="fas fa-plus"></i> Add Network 
+            </a>
+          </li>
+          {% for non_domain_model in non_domain_model_data %}
+          <li>
+            <a href="{{ url_for('home_blueprint.view_non_domain_item', item_id=non_domain_model.id) }}" class="text-white">
+              <i class="fas fa-laptop"></i> {{ non_domain_model.name }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      
+      <!-- Domain -->
+      {% set domain_active = 'show' if request.path.startswith('/view_domain_item') else '' %}
+      <li>
+        <a href="#domainmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if domain_active else 'false' }}" class="dropdown-toggle text-white no-caret-down">
+          <i class="fas fa-caret-down"></i> Domain
+        </a>
+        <ul class="collapse list-unstyled {{ domain_active }}" id="domainmenu">
+          <li>
+            <a href="{{ url_for('home_blueprint.add_network_domain') }}" class="text-white">
+              <i class="fas fa-plus"></i> Add Domain Network
+            </a>
+          </li>
+          {% for domain_model in domain_model_data %}
+          <li>
+            <a href="{{ url_for('home_blueprint.view_domain_item', item_id=domain_model.id) }}" class="text-white">
+              <i class="fas fa-laptop"></i> {{ domain_model.name }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      
+      <!-- Other Links -->
+      <hr class="bg-white"/>
+      <li>
+        <a href="/settings" class="text-white"><i class="fas fa-cog"></i> Settings</a>
+      </li>
+      <li>
+        <a href="/history" class="text-white"><i class="fas fa-history"></i> History</a>
+      </li>
+      <li>
+        <a href="/logs" class="text-white"><i class="fas fa-code"></i> Logs</a>
+      </li>
+    </ul>
+
+    <!-- Application Version -->
+    <div class="sidebar-footer text-center py-2 mt-auto">
+      <span class="app-version">Version: 1.0.0beta</span>
+    </div>
+  </nav>
+</div>

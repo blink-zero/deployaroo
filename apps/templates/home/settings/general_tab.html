@@ -1,0 +1,38 @@
+<div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+    <!-- Change password form -->
+    <form action="{{ url_for('settings_blueprint.new_password') }}" method="post">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0"><i class="fa fa-key"></i> Change Password</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row">
+                            <label for="old_password" class="col-sm-2 col-form-label">Current Password</label>
+                            <div class="col-sm-6">
+                                <input type="password" id="old_password" name="old_password" class="form-control" placeholder="Enter Current Password" required>
+                                <small class="form-text text-muted">Please enter your current password.</small>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="new_password" class="col-sm-2 col-form-label">New Password</label>
+                            <div class="col-sm-6">
+                                <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Enter New Password" required>
+                                <small class="form-text text-muted">Your new password must be at least 8 characters long and contain a mix of letters and numbers.</small>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="confirm_password" class="col-sm-2 col-form-label">Confirm New Password</label>
+                            <div class="col-sm-6">
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm New Password" required>
+                                <small class="form-text text-muted">Re-enter your new password for confirmation.</small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Change Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,192 @@
+<div class="tab-pane fade {% if active_tab == 'default_vm' %}show active{% endif %}" id="default-vm" role="tabpanel" aria-labelledby="default-vm-tab">
+    <!-- Default VM values form -->
+    <form action="{{ url_for('settings_blueprint.update_default_vm_values') }}" method="post">
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h4><i class="fa fa-cog"></i> Default VM Values (Global)</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- VM State -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="vm_state" class="col-sm-2 col-form-label">VM State</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select" name="vm_state" required>
+                                        <option value="poweredon" {% if defaultvmsettings.vm_state == 'poweredon' %} selected {% endif %}>Powered On</option>
+                                        <option value="poweredoff" {% if defaultvmsettings.vm_state == 'poweredoff' %} selected {% endif %}>Powered Off</option>
+                                    </select>
+                                    {% if defaultvmsettings.vm_state %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Select the default state for new VMs.</small>
+                            </div>
+                        </div>
+                        <!-- Linux Disk Size -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="linux_disk_size" class="col-sm-2 col-form-label">Linux Disk Size</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select" name="linux_disk_size" required>
+                                        <option value="40" {% if defaultvmsettings.linux_disk_size == '40' %} selected {% endif %}>40GB</option>
+                                        <option value="60" {% if defaultvmsettings.linux_disk_size == '60' %} selected {% endif %}>60GB</option>
+                                        <option value="80" {% if defaultvmsettings.linux_disk_size == '80' %} selected {% endif %}>80GB</option>
+                                        <option value="100" {% if defaultvmsettings.linux_disk_size == '100' %} selected {% endif %}>100GB</option>
+                                    </select>
+                                    {% if defaultvmsettings.linux_disk_size %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default disk size for Linux VMs.</small>
+                            </div>
+                        </div>
+                        <!-- Windows Disk Size -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="windows_disk_size" class="col-sm-2 col-form-label">Windows Disk Size</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select" name="windows_disk_size" required>
+                                        <option value="60" {% if defaultvmsettings.windows_disk_size == '60' %} selected {% endif %}>60GB</option>
+                                        <option value="100" {% if defaultvmsettings.windows_disk_size == '100' %} selected {% endif %}>100GB</option>
+                                        <option value="120" {% if defaultvmsettings.windows_disk_size == '120' %} selected {% endif %}>120GB</option>
+                                    </select>
+                                    {% if defaultvmsettings.windows_disk_size %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default disk size for Windows VMs.</small>
+                            </div>
+                        </div>
+                        <!-- VM Hardware SCSI -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="vm_hardware_scsi" class="col-sm-2 col-form-label">VM Hardware SCSI</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select" name="vm_hardware_scsi" required>
+                                        <option value="buslogic" {% if defaultvmsettings.vm_hw_scsi == 'buslogic' %} selected {% endif %}>BusLogic</option>
+                                        <option value="lsilogic" {% if defaultvmsettings.vm_hw_scsi == 'lsilogic' %} selected {% endif %}>LSI Logic</option>
+                                        <option value="lsilogicsas" {% if defaultvmsettings.vm_hw_scsi == 'lsilogicsas' %} selected {% endif %}>LSI Logic SAS</option>
+                                        <option value="paravirtual" {% if defaultvmsettings.vm_hw_scsi == 'paravirtual' %} selected {% endif %}>Paravirtual</option>
+                                        <option value="sata" {% if defaultvmsettings.vm_hw_scsi == 'sata' %} selected {% endif %}>SATA</option>
+                                        <option value="nvme" {% if defaultvmsettings.vm_hw_scsi == 'nvme' %} selected {% endif %}>NVMe</option>
+                                    </select>
+                                    {% if defaultvmsettings.vm_hw_scsi %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default SCSI type for VM hardware.</small>
+                            </div>
+                        </div>
+                        <!-- VM Type -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="vm_type" class="col-sm-2 col-form-label">VM Type</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select" name="vm_type" required>
+                                        <option value="thin" {% if defaultvmsettings.vm_type == 'thin' %} selected {% endif %}>Thin</option>
+                                        <option value="thick" {% if defaultvmsettings.vm_type == 'thick' %} selected {% endif %}>Thick</option>
+                                        <option value="eagerzeroedthick" {% if defaultvmsettings.vm_type == 'eagerzeroedthick' %} selected {% endif %}>Eager Zeroed Thick</option>
+                                    </select>
+                                    {% if defaultvmsettings.vm_type %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Select the default VM type.</small>
+                            </div>
+                        </div>
+                        <!-- Linux Template Username -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="linux_template_username" class="col-sm-2 col-form-label">Linux Template Username</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control" name="linux_template_username" value="{{ defaultvmsettings.linux_template_username }}" required>
+                                    {% if defaultvmsettings.linux_template_username %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default username for Linux templates.</small>
+                            </div>
+                        </div>
+                        <!-- Windows Template Username -->
+                        <div class="mb-3 row align-items-center">
+                            <label for="windows_template_username" class="col-sm-2 col-form-label">Windows Template Username</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control" name="windows_template_username" value="{{ defaultvmsettings.windows_template_username }}" required>
+                                    {% if defaultvmsettings.windows_template_username %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default username for Windows templates.</small>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <button class="btn btn-primary"><i class="fas fa-save"></i> Save Defaults</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- Passwords form -->
+    <form action="{{ url_for('settings_blueprint.update_template_passwords') }}" method="post">
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h4><i class="fa fa-lock"></i> Passwords (Global)</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row align-items-center">
+                            <label for="linux_template_password" class="col-sm-2 col-form-label">Linux Template Password</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <input type="password" class="form-control" name="linux_template_password" value="">
+                                    {% if defaultvmsettings.linux_template_password %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default password for Linux templates.</small>
+                            </div>
+                        </div>
+                        <div class="mb-3 row align-items-center">
+                            <label for="windows_template_password" class="col-sm-2 col-form-label">Windows Template Password</label>
+                            <div class="col-sm-3">
+                                <div class="d-flex align-items-center">
+                                    <input type="password" class="form-control" name="windows_template_password" value="">
+                                    {% if defaultvmsettings.windows_template_password %}
+                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
+                                    {% endif %}
+                                </div>
+                                <small class="form-text text-muted">Set the default password for Windows templates.</small>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <button class="btn btn-primary"><i class="fas fa-save"></i> Save Passwords</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

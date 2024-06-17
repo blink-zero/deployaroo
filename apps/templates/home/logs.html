@@ -1,0 +1,181 @@
+{% extends "layouts/base.html" %}
+{% block title %} Logs {% endblock %}
+{% block content %}
+
+<!-- Link to the external CSS file -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/logs.css') }}">
+
+<div class="wrapper d-flex">
+    <div id="sidebar">
+        {% include 'includes/sidebar.html' %}
+    </div>
+    <div id="body" class="flex-grow-1 d-flex flex-column">
+        {% include 'includes/navbar.html' %}
+        <div class="content flex-grow-1 p-4">
+            <div class="container-fluid">
+                <div class="page-title">
+                    <h3>Logs</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 col-lg-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-terminal"></i> Logging</span>
+                                <div>
+                                    <button class="btn btn-sm btn-secondary" id="themeToggle">
+                                        Switch Theme
+                                    </button>
+                                    <label class="ms-3">
+                                        Auto-Refresh
+                                        <label class="switch ms-2">
+                                            <input type="checkbox" id="autoRefreshToggle">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex mb-3">
+                                    <input type="text" id="searchInput" class="form-control" placeholder="Filter logs...">
+                                    <button class="btn btn-secondary ms-2" onclick="filterLogs()">
+                                        <i class="fas fa-search"></i> Filter
+                                    </button>
+                                </div>
+                                <div class="bg-dark text-white p-3 rounded log-container" style="overflow-y: auto; max-height: 50vh;">
+                                    <div id="output" style="white-space: pre-wrap; word-wrap: break-word; height: 100%;"></div>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <form method="GET" action="/download/server_log" class="d-inline">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-download"></i> Download
+                                        </button>
+                                    </form>
+                                    <p class="mt-2 text-muted">Download to see all logs</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let autoRefresh = false;
+    let refreshInterval;
+
+    function fetchLogs() {
+        fetch('/log.json')
+            .then(response => response.json())
+            .then(data => {
+                displayLogs(data.slice(0, 100)); // Display only the most recent 100 logs
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+                toastr.error('Failed to fetch logs.');
+            });
+    }
+
+    function displayLogs(logs) {
+        const output = document.getElementById('output');
+        output.innerHTML = '';
+
+        logs.forEach((log, index) => {
+            const logEntry = document.createElement('div');
+            logEntry.classList.add('log-entry');
+            logEntry.setAttribute('data-index', index);
+
+            // Create elements for timestamp, user, and message
+            const timestamp = document.createElement('span');
+            timestamp.classList.add('log-timestamp');
+            timestamp.textContent = log.timestamp;
+
+            const user = document.createElement('span');
+            user.classList.add('log-user');
+            user.textContent = `User: ${log.user}`;
+
+            const message = document.createElement('span');
+            message.classList.add('log-message');
+            message.textContent = `Message: ${log.message}`;
+
+            const caret = document.createElement('span');
+            caret.classList.add('caret');
+            caret.innerHTML = '<i class="fas fa-caret-down"></i>';
+            caret.style.cursor = 'pointer';
+            caret.addEventListener('click', () => {
+                const details = document.querySelector(`.log-details[data-index="${index}"]`);
+                if (details.style.display === 'none') {
+                    details.style.display = 'block';
+                    caret.innerHTML = '<i class="fas fa-caret-up"></i>';
+                } else {
+                    details.style.display = 'none';
+                    caret.innerHTML = '<i class="fas fa-caret-down"></i>';
+                }
+            });
+
+            // Create a container for additional details
+            const details = document.createElement('div');
+            details.classList.add('log-details');
+            details.setAttribute('data-index', index);
+            details.style.display = 'none';
+
+            for (const key in log) {
+                if (key !== 'timestamp' && key !== 'user' && key !== 'message') {
+                    const detail = document.createElement('div');
+                    detail.textContent = `${key}: ${log[key]}`;
+                    details.appendChild(detail);
+                }
+            }
+
+            // Append elements to the log entry
+            logEntry.appendChild(caret);
+            logEntry.appendChild(timestamp);
+            logEntry.appendChild(document.createTextNode(' - '));
+            logEntry.appendChild(user);
+            logEntry.appendChild(document.createTextNode(' - '));
+            logEntry.appendChild(message);
+
+            // Append log entry and details to the output
+            output.appendChild(logEntry);
+            output.appendChild(details);
+        });
+    }
+
+    function filterLogs() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        fetch('/log.json')
+            .then(response => response.json())
+            .then(data => {
+                const filteredLogs = data.filter(log => JSON.stringify(log).toLowerCase().includes(query)).slice(0, 100);
+                displayLogs(filteredLogs);
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+                toastr.error('Failed to fetch logs.');
+            });
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    function toggleAutoRefresh() {
+        autoRefresh = !autoRefresh;
+        if (autoRefresh) {
+            refreshInterval = setInterval(fetchLogs, 5000);
+        } else {
+            clearInterval(refreshInterval);
+        }
+    }
+
+    document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
+
+    document.addEventListener('DOMContentLoaded', fetchLogs);
+</script>
+
+{% include 'includes/toastr.html' %}
+
+{% endblock content %}

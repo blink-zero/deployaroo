@@ -1,0 +1,59 @@
+<nav class="navbar navbar-expand-lg navbar-custom bg-custom-navbar">
+  <div class="container-fluid">
+    <button type="button" id="sidebarCollapse" class="btn btn-outline-light">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <!-- ESXi Host Status -->
+        <li class="nav-item me-3">
+          <span class="nav-link text-white d-flex align-items-center">
+            <i class="fas fa-server me-2"></i>
+            <span class="d-none d-md-inline">Host Status:</span>
+            <span id="host-status" class="badge {% if host_status %}bg-success{% else %}bg-danger{% endif %} ms-2">{{ "Reachable" if host_status else "Not Reachable" }}</span>
+          </span>
+        </li>
+        <!-- Running VMs Status -->
+        <li class="nav-item me-3">
+          <span class="nav-link text-white d-flex align-items-center">
+            <i class="fas fa-tasks me-2"></i>
+            <span class="d-none d-md-inline">In Progress Builds:</span>
+            <span id="running-vms-count" class="badge bg-success ms-2">0</span>
+          </span>
+        </li>
+        <!-- User Dropdown Menu-->
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle text-white d-flex align-items-center" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle me-2"></i> {{ current_user.username }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a href="https://github.com/blink-zero/deployaroo/issues" class="dropdown-item"><i class="fas fa-bug me-2"></i> Report a Bug</a></li>
+            <li><a href="https://deployaroo.io" class="dropdown-item"><i class="fas fa-book me-2"></i> Documentation</a></li>
+            <li><a href="/settings" class="dropdown-item"><i class="fas fa-cog me-2"></i> Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a href="/logout" class="dropdown-item"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Update Running VMs Count -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function updateRunningVMsCount() {
+    fetch('/running_vms')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('running-vms-count').textContent = data.running_vms_count;
+      })
+      .catch(error => console.error('Error fetching running VMs count:', error));
+  }
+
+  updateRunningVMsCount();
+
+  // Update every 30 seconds
+  setInterval(updateRunningVMsCount, 30000);
+});
+</script>

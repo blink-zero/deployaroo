@@ -1,0 +1,75 @@
+/* Ensure Prism.js styles are not overridden */
+pre[class*="language-"] {
+    background: #2d2d2d !important;
+    color: #ccc !important;
+    padding: 1rem !important;
+    border-radius: 5px !important;
+    overflow: auto !important;
+}
+
+/* Override any specific styles if necessary */
+pre.language-ansible {
+    color: #ccc !important;
+}
+
+/* Additional custom styles */
+.token.comment, .token.block-comment, .token.prolog, .token.doctype, .token.cdata {
+    color: #999 !important;
+}
+
+.token.punctuation {
+    color: #ccc !important;
+}
+
+.token.tag, .token.attr-name, .token.namespace, .token.deleted {
+    color: #e2777a !important;
+}
+
+.token.function-name, .token.boolean, .token.number, .token.function {
+    color: #f08d49 !important;
+}
+
+.token.property, .token.class-name, .token.constant, .token.symbol {
+    color: #f8c555 !important;
+}
+
+.token.selector, .token.important, .token.atrule, .token.keyword, .token.builtin {
+    color: #cc99cd !important;
+}
+
+.token.string, .token.char, .token.attr-value, .token.regex, .token.variable {
+    color: #7ec699 !important;
+}
+
+.token.operator, .token.entity, .token.url {
+    color: #67cdcc !important;
+}
+
+.token.important, .token.bold {
+    font-weight: bold;
+}
+
+.token.italic {
+    font-style: italic;
+}
+
+.token.entity {
+    cursor: help;
+}
+
+pre[data-line] {
+    position: relative;
+    padding: 1em 0 1em 3em;
+}
+
+pre[data-line] .line-highlight {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: inherit 0;
+    margin-top: 1em;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+    line-height: inherit;
+    white-space: pre;
+}

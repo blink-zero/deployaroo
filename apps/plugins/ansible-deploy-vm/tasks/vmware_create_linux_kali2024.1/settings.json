@@ -1,0 +1,9 @@
+{
+    "image_template_name": "linux-kali-2024.1-v23.01",
+    "image_human_name": "Kali 2024.1",
+    "image_type": "linux",
+    "ansible_match_name": "lin_kali2024.1",
+    "vmware_os_type": "debian8_64Guest",
+    "image_icon_name": "linux-kali.png",
+    "network_type": "ansible-deploy-vm"
+}

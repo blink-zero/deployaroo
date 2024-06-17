@@ -1,0 +1,9 @@
+{
+    "image_template_name": "windows-server-2022-datacenter-dexp-v23.01",
+    "image_human_name": "Windows Server 2022 Desktop Experience - Domain Controller",
+    "image_type": "windows",
+    "ansible_match_name": "win_server2022dc_de_ad",
+    "vmware_os_type": "windows9Server64Guest",
+    "image_icon_name": "windows.png",
+    "network_type": "ansible-deploy-vm"
+}

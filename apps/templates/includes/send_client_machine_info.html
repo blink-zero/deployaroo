@@ -1,0 +1,39 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientForm = document.getElementById('client-testing-form');
+        const clientMachinesListInput = document.getElementById('client_machines_list');
+
+        let clientMachines = []; // To store the list of client machines
+
+        clientForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            let machineInfo = {
+                hostname: clientForm.hostname.value,
+                ipaddress: clientForm.ipaddress.value,
+                imagetype: clientForm.imagetype.value.split('|')[0],
+                machinetype: clientForm.imagetype.value.split('|')[1],
+                group: clientForm.imagetype.value.split('|')[2],
+                cpu: clientForm.cpu.value,
+                ram: clientForm.ram.value
+            };
+
+            clientMachines.push(machineInfo);
+            clientMachinesListInput.value = JSON.stringify(clientMachines);
+
+            addMachineToList(machineInfo);
+            resetForm(clientForm);
+
+            // Submit the form directly after adding the machine to the list
+            clientForm.submit();
+        });
+
+        function addMachineToList(machineInfo) {
+            // Implementation of the addMachineToList function (as before)
+        }
+
+        function resetForm(form) {
+            form.reset();
+        }
+    });
+</script>

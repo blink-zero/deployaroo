@@ -1,0 +1,103 @@
+- name: Load vars
+  hosts: localhost
+  vars_files:
+  - vars/other.yml
+- name: Build Windows Server 2019 Datacenter Desktop Experience Virtual Machine
+  hosts: win_server2019dc_de
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_windows_server2019dc_de/main.yml
+  serial: 1
+- name: Build Windows Server 2019 Datacenter Core Virtual Machine
+  hosts: win_server2019dc_core
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_windows_server2019dc_core/main.yml
+  serial: 1
+- name: Build Windows Server 2022 Datacenter Desktop Experience Virtual Machine
+  hosts: win_server2022dc_de
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_windows_server2022dc_de/main.yml
+  serial: 1
+- name: Build Windows Server 2022 Datacenter Core Virtual Machine
+  hosts: win_server2022dc_core
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_windows_server2022dc_core/main.yml
+  serial: 1
+- name: Build Windows 10 Professional Virtual Machine
+  hosts: win_10pro
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_windows_10pro/main.yml
+  serial: 1
+- name: Build Linux CentOS 7 Minimal Virtual Machine
+  hosts: lin_centos7_min
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_linux_centos7_minimal/main.yml
+  serial: 1
+- name: Build Linux Ubuntu 18.04 Minimal Virtual Machine
+  hosts: lin_ubuntu18.04_min
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_linux_ubuntu18.04_minimal/main.yml
+  serial: 1
+- name: Build Linux Ubuntu 20.04 Minimal Virtual Machine
+  hosts: lin_ubuntu20.04_min
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_linux_ubuntu20.04_minimal/main.yml
+  serial: 1
+- name: Build Linux Ubuntu 22.04 Minimal Virtual Machine
+  hosts: lin_ubuntu22.04_min
+  become: false
+  gather_facts: false
+  collections:
+  - community.vmware
+  pre_tasks:
+  - include_vars: vars/other.yml
+  tasks:
+  - import_tasks: tasks/vmware_create_domain_linux_ubuntu22.04_minimal/main.yml
+  serial: 1

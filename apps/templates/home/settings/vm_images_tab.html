@@ -1,0 +1,370 @@
+<div class="tab-pane fade show active" id="vm-images" role="tabpanel" aria-labelledby="vm-images-tab">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Virtual Machine Images</h4>
+        <div>
+            <button id="uploadZipBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Upload Zip</button>
+            <button id="scanImagesBtn" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Scan Images</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search for images...">
+        </div>
+        <div class="col-md-8 text-end">
+            <span class="badge bg-success">Domain: {{ domain_count }}</span>
+            <span class="badge bg-secondary">Non-Domain: {{ non_domain_count }}</span>
+            <span class="badge bg-info">Linux: {{ linux_count }}</span>
+            <span class="badge bg-primary">Windows: {{ windows_count }}</span>
+        </div>
+    </div>
+
+    <div class="row" id="imagesContainer">
+        {% for image in vm_images %}
+        <div class="col-md-4 mb-4 image-card" data-template-name="{{ image.image_template_name }}" data-human-name="{{ image.image_human_name }}" data-type="{{ image.image_type }}">
+            <div class="card h-100 shadow-sm border-{{ 'primary' if 'windows' in image.image_type.lower() else 'info' }}">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='images/' + image.network_type + '/' + image.image_icon_name) }}" alt="Icon" class="image-icon">
+                        <h5 class="card-title mb-0">{{ image.image_human_name }}</h5>
+                    </div>
+                    <p class="card-text">
+                        <span class="badge bg-{{ 'primary' if 'windows' in image.image_type.lower() else 'info' }} text-white">{{ image.image_type }}</span>
+                        {% if image.network_type == 'domain' %}
+                        <span class="badge bg-success text-white">Domain</span>
+                        {% else %}
+                        <span class="badge bg-secondary text-white">Non-Domain</span>
+                        {% endif %}
+                    </p>
+                    <p class="card-text flex-grow-1">{{ image.image_template_name }}</p>
+                    <div class="d-flex justify-content-end align-items-center mt-auto">
+                        <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#imageModal{{ image.id }}">Details</button>
+                        <button class="btn btn-sm btn-outline-warning me-2" data-bs-toggle="modal" data-bs-target="#modifyImageModal{{ image.id }}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteImageModal{{ image.id }}"><i class="fas fa-trash"></i></button>
+                        <!-- View Playbook Button -->
+                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewPlaybookModal{{ image.id }}" onclick="loadPlaybook('{{ image.id }}')"><i class="fas fa-book"></i> View Playbook</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Image Details -->
+        <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel{{ image.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel{{ image.id }}">{{ image.image_human_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Template Name:</strong> {{ image.image_template_name }}</li>
+                            <li class="list-group-item"><strong>Folder Name:</strong> {{ image.image_folder_name }}</li>
+                            <li class="list-group-item"><strong>Type:</strong> {{ image.image_type }}</li>
+                            <li class="list-group-item"><strong>Ansible Match Name:</strong> {{ image.ansible_match_name }}</li>
+                            <li class="list-group-item"><strong>VMware OS Type:</strong> {{ image.vmware_os_type }}</li>
+                            <li class="list-group-item"><strong>Icon Name:</strong> {{ image.image_icon_name }}</li>
+                            <li class="list-group-item"><strong>Network Type:</strong> {{ image.network_type }}</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Modifying Image -->
+        <div class="modal fade" id="modifyImageModal{{ image.id }}" tabindex="-1" role="dialog" aria-labelledby="modifyImageModalLabel{{ image.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title" id="modifyImageModalLabel{{ image.id }}">Modify Image</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="modifyImageForm{{ image.id }}" onsubmit="modifyImage(event, '{{ url_for('settings_blueprint.modify_image', image_id=image.id) }}')" data-template-name="{{ image.image_template_name }}">
+                            <div class="mb-3">
+                                <label for="imageHumanName{{ image.id }}" class="form-label">Human Name</label>
+                                <input type="text" class="form-control" id="imageHumanName{{ image.id }}" name="image_human_name" value="{{ image.image_human_name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="imageTemplateName{{ image.id }}" class="form-label">Template Name</label>
+                                <input type="text" class="form-control" id="imageTemplateName{{ image.id }}" name="image_template_name" value="{{ image.image_template_name }}" required>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Deleting Image -->
+        <div class="modal fade" id="deleteImageModal{{ image.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteImageModalLabel{{ image.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title" id="deleteImageModalLabel{{ image.id }}">Delete Image</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete the image <strong>{{ image.image_human_name }}</strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteImage('{{ url_for('settings_blueprint.delete_image', image_id=image.id) }}')">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Viewing Playbook -->
+        <div class="modal fade" id="viewPlaybookModal{{ image.id }}" tabindex="-1" role="dialog" aria-labelledby="viewPlaybookModalLabel{{ image.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                <div class="modal-content modal-dark">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="viewPlaybookModalLabel{{ image.id }}">Playbook for {{ image.image_human_name }} - Network Type: {{ image.network_type }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body-scrollable">
+                        <pre><code id="playbookContent{{ image.id }}" class="yaml"></code></pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Include highlight.js for syntax highlighting -->
+<link href="{{ url_for('static', filename='vendor/highlightjs11.2.0/monokai.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='vendor/highlightjs11.2.0/highlight.min.js') }}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize highlight.js
+    hljs.highlightAll();
+
+    // Scan images button click event
+    document.getElementById("scanImagesBtn").addEventListener("click", function() {
+        toastr.info("Scanning images...");
+        fetch("{{ url_for('settings_blueprint.scan_images') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                toastr.success("Images scanned successfully.");
+                location.reload();  // Reload the page to show updated images
+            } else {
+                toastr.error("Failed to scan images: " + data.message);
+            }
+        })
+        .catch(error => {
+            toastr.error("An error occurred while scanning images.");
+            console.error("Error:", error);
+        });
+    });
+
+    // Upload zip file button click event
+    document.getElementById("uploadZipBtn").addEventListener("click", function() {
+        var input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".zip";
+        input.onchange = function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var formData = new FormData();
+                formData.append("zipfile", file);
+                toastr.info("Uploading zip file...");
+                fetch("{{ url_for('settings_blueprint.upload_zip') }}", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        toastr.success("Zip file uploaded successfully.");
+                        location.reload();  // Reload the page to show updated images
+                    } else {
+                        toastr.error("Failed to upload zip file: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    toastr.error("An error occurred while uploading zip file.");
+                    console.error("Error:", error);
+                });
+            }
+        };
+        input.click();
+    });
+
+    // Search functionality
+    document.getElementById("searchInput").addEventListener("input", function() {
+        var searchValue = this.value.toLowerCase();
+        var imageCards = document.querySelectorAll(".image-card");
+
+        imageCards.forEach(function(card) {
+            var templateName = card.getAttribute("data-template-name").toLowerCase();
+            var humanName = card.getAttribute("data-human-name").toLowerCase();
+            var type = card.getAttribute("data-type").toLowerCase();
+
+            if (templateName.includes(searchValue) || humanName.includes(searchValue) || type.includes(searchValue)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+});
+
+function deleteImage(deleteUrl) {
+    toastr.info("Deleting image...");
+    fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            toastr.success("Image deleted successfully.");
+            location.reload();  // Reload the page to show updated images
+        } else {
+            toastr.error("Failed to delete image: " + data.message);
+        }
+    })
+    .catch(error => {
+        toastr.error("An error occurred while deleting image.");
+        console.error("Error:", error);
+    });
+}
+
+function modifyImage(event, modifyUrl) {
+    event.preventDefault();
+    var form = event.target;
+    var image_human_name = form.querySelector('[name="image_human_name"]').value;
+    var image_template_name = form.querySelector('[name="image_template_name"]').value;
+
+    var imageData = {
+        image_human_name: image_human_name,
+        image_template_name: image_template_name
+    };
+
+    toastr.info("Modifying image...");
+    fetch(modifyUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(imageData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            toastr.success("Image modified successfully.");
+            // Update the card with the new values without reloading the page
+            var card = document.querySelector(`.image-card[data-template-name="${form.dataset.templateName}"]`);
+            card.querySelector('.card-title').innerText = image_human_name;
+            card.dataset.templateName = image_template_name;
+            card.dataset.humanName = image_human_name;
+            form.closest('.modal').querySelector('.btn-close').click();  // Close the modal
+        } else {
+            toastr.error("Failed to modify image: " + data.message);
+        }
+    })
+    .catch(error => {
+        toastr.error("An error occurred while modifying image.");
+        console.error("Error:", error);
+    });
+}
+
+function loadPlaybook(imageId) {
+    fetch(`/get_playbook/${imageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`playbookContent${imageId}`).textContent = data.playbook_content;
+                hljs.highlightElement(document.getElementById(`playbookContent${imageId}`));  // Highlight the loaded content
+            } else {
+                toastr.error("Failed to load playbook: " + data.message);
+            }
+        })
+        .catch(error => {
+            toastr.error("An error occurred while loading playbook.");
+            console.error("Error:", error);
+        });
+}
+</script>
+
+<style>
+.card:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+.btn-outline-primary {
+    transition: background-color 0.2s, color 0.2s;
+}
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}
+.badge.bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+.badge.bg-primary {
+    background-color: #007bff !important;
+    color: white !important;
+}
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+.btn-close {
+    background-color: white;
+}
+.image-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 15px; /* Increased spacing */
+}
+
+/* Dark mode styling */
+.modal-dark {
+    background-color: #343a40;
+    color: white;
+}
+.modal-dark .modal-header {
+    border-bottom: 1px solid #444;
+}
+.modal-dark .modal-footer {
+    border-top: 1px solid #444;
+}
+.modal-dark .btn-close {
+    filter: invert(1);
+}
+.modal-body-scrollable {
+    height: 70vh;
+    overflow-y: auto;
+}
+</style>

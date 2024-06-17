@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Deployaroo | {% block title %}{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='logo/deployaroo_white.ico') }}">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="{{ url_for('static', filename='vendor/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/toastr/toastr.min.css') }}" rel="stylesheet">
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <main class="flex-grow-1 d-flex flex-column">
+    {% block content %}{% endblock %}
+  </main>
+  {% include 'includes/footer-login.html' %}
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="{{ url_for('static', filename='vendor/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
+
+</body>
+
+</html>

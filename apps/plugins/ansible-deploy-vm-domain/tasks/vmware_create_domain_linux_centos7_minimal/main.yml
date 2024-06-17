@@ -1,0 +1,127 @@
+---
+# Playbook: vmware_create_domain_linux_centos7_minimal
+# Version: 1.0
+# Date: 2024-06-08
+# Author: blink-zero
+# Description: This playbook automates the deployment of a CentOS 7 virtual machine template and joins it to an Active Directory domain.
+
+- name: Deploy Linux Domain Template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"       # vCenter server hostname
+    username: "{{ vcenter_username }}"       # vCenter server username
+    password: "{{ vcenter_password }}"       # vCenter server password
+    validate_certs: "{{ vcenter_validate_certs }}"  # Whether to validate SSL certificates
+    datacenter: "{{ vcenter_datacenter }}"   # Datacenter name
+    name: "{{ guest_hostname }}"             # Name of the new virtual machine
+    folder: "{{ vm_folder }}"                # Folder in which to create the VM
+    state: "{{ vm_state }}"                  # Desired state of the VM (present/absent)
+    guest_id: "{{ vm_guestid }}"             # Guest OS identifier
+    esxi_hostname: "{{ esxi_host }}"         # ESXi host on which to deploy the VM
+    template: "{{ template_name }}"          # Name of the template to use for the VM
+    disk:
+      - size_gb: "{{ lin_disk_size }}"       # Size of the VM disk in GB
+        type: "{{ vm_type }}"                # Disk type (thin/thick)
+        datastore: "{{ vm_disk_datastore }}" # Datastore for the VM disk
+    hardware:
+      memory_mb: "{{ guest_vram }}"          # Memory size in MB
+      num_cpus: "{{ guest_vcpu }}"           # Number of CPUs
+      scsi: "{{ vm_hw_scsi }}"               # SCSI controller type
+    networks:
+      - name: "{{ vm_net_name }}"            # Network name
+        ip: "{{ inventory_hostname }}"       # IP address of the VM
+        netmask: "{{ netmask }}"             # Network mask
+        gateway: "{{ gateway }}"             # Gateway address
+    customization:
+      domain: "{{ ad_domain }}"              # Active Directory domain to join
+      dns_servers:
+        - "{{ dns1 }}"                       # Primary DNS server
+        - "{{ dns2 }}"                       # Secondary DNS server
+      dns_suffix:
+        - "{{ ad_domain }}"                  # DNS suffix for the domain
+    wait_for_ip_address: True                # Wait for the IP address to be assigned
+  delegate_to: localhost
+
+- name: Add host to Ansible inventory
+  ansible.builtin.add_host:
+    hostname: '{{ inventory_hostname }}'           # Hostname of the new VM
+    ansible_user: '{{ linux_template_username }}'  # SSH username for the new VM
+    ansible_password: '{{ linux_template_password }}'  # SSH password for the new VM
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'  # Always trust, don't store keys
+
+- name: Wait for system to become reachable over SSH
+  wait_for_connection:
+    timeout: 900                                   # Timeout in seconds
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Install the epel-release - For python-pip
+  yum:
+    name: epel-release                             # Package name
+    state: present                                 # Ensure the package is installed
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Install the required packages
+  yum:
+    name: realmd,sssd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,ntpdate,ntp,python-pip  # Package names
+    state: present                                 # Ensure the packages are installed
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Restart realmd
+  service:
+    name: realmd                                   # Service name
+    state: restarted                               # Restart the service
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Install pexpect using pip
+  pip:
+    name: pexpect                                  # Package name
+    extra_args: --trusted-host pypi.python.org --trusted-host files.pythonhosted.org  # Additional arguments for pip
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Join system to AD
+  expect:
+    command: /bin/bash -c "/usr/sbin/realm join --user={{ domain_join_username }}@{{ ad_domain }} --computer-ou={{ ad_centos_ou_membership }} {{ ad_domain }}"  # Command to join AD
+    responses:
+      Password for *: "{{ domain_join_password }}"  # Provide password for AD join
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Add default_domain_suffix to sssd.conf
+  lineinfile:
+    dest: /etc/sssd/sssd.conf                      # Destination file
+    line: 'default_domain_suffix = {{ ad_domain }}'  # Line to add
+    insertafter: '^\[sssd\]'                       # Insert after the [sssd] section
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Restart sssd
+  service:
+    name: sssd                                     # Service name
+    state: restarted                               # Restart the service
+  become: yes                                      # Run as root
+  when: template_name.find("centos") != -1         # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Allow all users to logon to the system
+  command: /bin/bash -c "/usr/sbin/realm permit --all"  # Command to permit all users
+  become: yes                                           # Run as root
+  when: template_name.find("centos") != -1              # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: CentOS - Add the Domain Admins AD Group to sudoers file
+  lineinfile:
+    dest: /etc/sudoers                                # Destination file
+    line: '%domain\ admins@{{ ad_domain }}        ALL=(ALL)       ALL'  # Line to add to sudoers file
+    insertafter: '^%wheel'                           # Insert after the %wheel line
+  become: yes                                        # Run as root
+  when: template_name.find("centos") != -1           # Condition to run for CentOS
+  delegate_to: '{{ inventory_hostname }}'

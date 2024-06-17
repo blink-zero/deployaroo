@@ -1,0 +1,103 @@
+---
+- name: Deploy Windows Template
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    name: "{{ guest_hostname }}"
+    folder: "{{ vm_folder }}"
+    state: "{{ vm_state }}"
+    guest_id: "{{ vm_guestid }}"
+    esxi_hostname: "{{ esxi_host }}"
+    template: "{{ template_name }}"
+    disk:
+      - size_gb: "{{ win_disk_size }}"
+        type: "{{ vm_type }}"
+        datastore: "{{ vm_disk_datastore }}"
+    hardware:
+      memory_mb: "{{ guest_vram }}"
+      num_cpus: "{{ guest_vcpu }}"
+      scsi: "{{ vm_hw_scsi }}"
+    networks:
+      - name: "{{ vm_net_name }}"
+        ip: "{{ inventory_hostname }}"
+        netmask: "{{ netmask }}"
+        gateway: "{{ gateway }}"
+    customization:
+      autologon: true
+      autologoncount: 1
+      hostname: "{{ guest_hostname }}"
+      dns_servers:
+        - "{{ dns1 }}"
+        - "{{ dns2 }}"
+      timezone: "{{ timezone }}"
+      password: "{{ windows_template_password }}"
+      runonce:
+        - cmd /c echo New-NetFirewallRule -DisplayName "WinRM 5985" -Direction Inbound -LocalPort 5985 -Protocol TCP -RemoteAddress Any -Action Allow > C:\enable_winrm.ps1
+        - powershell.exe -ExecutionPolicy Unrestricted -File C:\enable_winrm.ps1 -ForceNewSSLCert -EnableCredSSP
+    wait_for_customization: yes
+    wait_for_ip_address: True
+  delegate_to: localhost
+
+- name: Add host to Ansible inventory
+  add_host:
+    name: '{{ inventory_hostname }}'
+    ansible_user: '.\{{ windows_template_username }}'
+    ansible_password: '{{ windows_template_password }}'
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_winrm_port: 5985
+
+- name: Wait for system to become reachable over WinRM
+  wait_for_connection:
+    timeout: 900
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Download FactoryIO (264MB)
+  win_get_url:
+    url: "https://realgames.b-cdn.net/fio/factoryio-installer-latest.exe"
+    dest: "C:/factoryio-installer-latest.exe"
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install FactoryIO
+  win_command: "C:/factoryio-installer-latest.exe --mode unattended"
+  args:
+    chdir: "C:/"
+  register: factoryio_install
+  delegate_to: '{{ inventory_hostname }}'
+  async: 900
+  poll: 0
+
+- name: Create PowerShell script to install .NET Framework 3.5
+  win_copy:
+    content: |
+      Start-Process powershell -ArgumentList 'Enable-WindowsOptionalFeature -Online -FeatureName NetFx3 -All' -Verb runAs
+    dest: C:\install_dotnet.ps1
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Run PowerShell script to install .NET Framework 3.5
+  win_shell: powershell.exe -File C:\install_dotnet.ps1
+  register: dotnet_install
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Create directory for Conveyor.factoryio
+  win_file:
+    path: "C:/Users/Administrator/Documents/Factory IO/My Scenes"
+    state: directory
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Download Conveyor.factoryio
+  win_get_url:
+    url: "https://github.com/TravisAnde/fio-conveyor/raw/main/Conveyor.factoryio"
+    dest: "C:/Users/Administrator/Documents/Factory IO/My Scenes/Conveyor.factoryio"
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Change Administrator password to 'NozomiNetworks1!'
+  win_user:
+    name: Administrator
+    password: "NozomiNetworks1!"
+    update_password: always
+  delegate_to: '{{ inventory_hostname }}'

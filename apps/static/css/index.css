@@ -1,0 +1,78 @@
+.badge.bg-success {
+    background-color: #28a745 !important;
+    color: #fff !important;
+  }
+  
+  .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #fff !important;
+  }
+  
+  .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .table thead th {
+    background-color: #f1f1f1;
+  }
+  
+  .card {
+    border-radius: 0.5rem;
+  }
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .table th,
+  .table td {
+    vertical-align: middle;
+  }
+  
+  .icon-big {
+    font-size: 1.5rem;
+  }
+  
+  .icon-big.bg-primary {
+    background-color: #007bff;
+  }
+  
+  .icon-big.bg-success {
+    background-color: #28a745;
+  }
+  
+  .icon-big.bg-warning {
+    background-color: #ffc107;
+  }
+  
+  .icon-big.bg-danger {
+    background-color: #dc3545;
+  }
+  
+  .icon-big.bg-info {
+    background-color: #17a2b8;
+  }
+  
+  .icon-big.bg-secondary {
+    background-color: #6c757d;
+  }
+  
+  .icon-big.bg-light {
+    background-color: #f8f9fa;
+    color: #343a40;
+  }
+  
+  .text-muted {
+    color: #6c757d !important;
+  }
+  

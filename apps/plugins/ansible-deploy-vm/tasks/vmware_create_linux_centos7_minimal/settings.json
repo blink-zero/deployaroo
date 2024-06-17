@@ -1,0 +1,9 @@
+{
+    "image_template_name": "linux-centos-7-v23.01",
+    "image_human_name": "CentOS 7 - Minimal",
+    "image_type": "linux",
+    "ansible_match_name": "lin_centos7_min",
+    "vmware_os_type": "centos64Guest",
+    "image_icon_name": "linux-centos-7.png",
+    "network_type": "ansible-deploy-vm"
+}

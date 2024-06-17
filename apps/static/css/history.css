@@ -1,0 +1,71 @@
+.state-icon .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: black !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.form-control {
+  border-radius: 0.25rem;
+  box-shadow: none;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+
+.btn-primary:focus, .btn-primary.focus {
+  box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+}
+
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.table {
+  margin-bottom: 1.5rem;
+}
+
+.table th a {
+  text-decoration: none;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.btn-link.badge-view-log {
+  padding: 0;
+  font-size: 0.875rem;
+}

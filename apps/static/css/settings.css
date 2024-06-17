@@ -1,0 +1,118 @@
+.wide-modal {
+    max-width: 1200px; /* Or whatever width you want */
+}
+
+/* Basic styling for the settings page */
+.wrapper {
+    display: flex;
+    transition: margin-right 0.3s;
+}
+
+.content {
+    flex-grow: 1;
+}
+
+.box {
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.box-secondary .box-body {
+    padding: 1.5rem;
+}
+
+/* Nav-tabs styling */
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    color: #007bff; /* Default text color */
+    padding: 10px 15px;
+    transition: color 0.3s, background-color 0.3s, border-color 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #0056b3; /* Darker blue on hover */
+}
+
+.nav-tabs .nav-link.active {
+    color: #fff; /* White text for active tab */
+    background-color: #007bff; /* Blue background for active tab */
+    border-color: #007bff #007bff #fff; /* Adjust border color for active tab */
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    color: #fff; /* Ensure active tab text color remains white */
+}
+
+.nav-tabs .nav-link.disabled {
+    color: #6c757d;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Additional form styling */
+.form-control {
+    border-radius: 0.25rem;
+    box-shadow: none;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.btn-primary:focus, .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-danger:focus, .btn-danger.focus {
+    box-shadow: 0 0 0 0.2rem rgba(225,83,97,.5);
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-text {
+    color: #6c757d;
+}
+
+.modal-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.delete-button, .settings-button {
+    margin-right: 10px;
+}

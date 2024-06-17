@@ -1,0 +1,190 @@
+---
+# Playbook: vmware_create_windows_server2022dc_de_ad
+# Version: 1.0
+# Date: 2024-06-08
+# Author: blink-zero
+# Description: This playbook automates the deployment and configuration of a Windows Active Directory virtual machine.
+
+- name: Create Windows AD Virtual Machine
+  vmware_guest:
+    hostname: "{{ vcenter_hostname }}"       # vCenter server hostname
+    username: "{{ vcenter_username }}"       # vCenter server username
+    password: "{{ vcenter_password }}"       # vCenter server password
+    validate_certs: "{{ vcenter_validate_certs }}"  # Whether to validate SSL certificates
+    datacenter: "{{ vcenter_datacenter }}"   # Datacenter name
+    name: "{{ guest_hostname }}"             # Name of the new virtual machine
+    folder: "{{ vm_folder }}"                # Folder in which to create the VM
+    state: "{{ vm_state }}"                  # Desired state of the VM (present/absent)
+    guest_id: "{{ vm_guestid }}"             # Guest OS identifier
+    esxi_hostname: "{{ esxi_host }}"         # ESXi host on which to deploy the VM
+    template: "{{ template_name }}"          # Name of the template to use for the VM
+    disk:
+      - size_gb: "{{ win_disk_size }}"       # Size of the VM disk in GB
+        type: "{{ vm_type }}"                # Disk type (thin/thick)
+        datastore: "{{ vm_disk_datastore }}" # Datastore for the VM disk
+    hardware:
+      memory_mb: "{{ guest_vram }}"          # Memory size in MB
+      num_cpus: "{{ guest_vcpu }}"           # Number of CPUs
+      scsi: "{{ vm_hw_scsi }}"               # SCSI controller type
+    networks:
+      - name: "{{ vm_net_name }}"            # Network name
+        ip: "{{ inventory_hostname }}"       # IP address of the VM
+        netmask: "{{ netmask }}"             # Network mask
+        gateway: "{{ gateway }}"             # Gateway address
+    customization:
+      autologon: true                        # Enable autologon
+      autologoncount: 1                      # Number of autologon attempts
+      hostname: "{{ guest_hostname }}"       # Hostname of the VM
+      dns_servers:
+        - "{{ dns1 }}"                       # Primary DNS server
+        - "{{ dns2 }}"                       # Secondary DNS server
+      timezone: "{{ timezone }}"             # Timezone setting
+      password: "{{ windows_template_password }}"  # Administrator password
+      runonce:                               # Commands to run once after customization
+        - cmd /c echo New-NetFirewallRule -DisplayName "WinRM 5985" -Direction Inbound -LocalPort 5985 -Protocol TCP -RemoteAddress Any -Action Allow > C:\enable_winrm.ps1
+        - powershell.exe -ExecutionPolicy Unrestricted -File C:\enable_winrm.ps1 -ForceNewSSLCert -EnableCredSSP
+    wait_for_customization: yes              # Wait for customization to complete
+    wait_for_ip_address: True                # Wait for the IP address to be assigned
+  delegate_to: localhost
+
+- name: Add host to Ansible inventory
+  add_host:
+    name: '{{ inventory_hostname }}'                          # Hostname of the new VM
+    ansible_user: '.\{{ windows_template_username }}'         # Ansible user for WinRM
+    ansible_password: '{{ windows_template_password }}'       # Ansible password for WinRM
+    ansible_connection: winrm                                 # Use WinRM for connection
+    ansible_winrm_transport: ntlm                             # WinRM transport protocol
+    ansible_winrm_server_cert_validation: ignore              # Ignore WinRM server certificate validation
+    ansible_winrm_port: 5985                                  # WinRM port
+
+- name: Wait for system to become reachable over WinRM
+  wait_for_connection:
+    timeout: 900                                             # Timeout in seconds
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Set upstream DNS server 
+  win_dns_client:
+    adapter_names: '*'                                       # Adapter name pattern
+    ipv4_addresses:
+      - '{{ dns1 }}'                                         # Primary DNS server
+      - '{{ dns2 }}'                                         # Secondary DNS server
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Stop the time service
+  win_service:
+    name: w32time                                            # Time service name
+    state: stopped                                           # Desired state (stopped)
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Set NTP Servers
+  win_shell: 'w32tm /config /syncfromflags:manual /manualpeerlist:"{{ ntp_servers }}"'  # Command to configure NTP servers
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Start the time service
+  win_service:
+    name: w32time                                            # Time service name
+    state: started                                           # Desired state (started)
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Disable firewall for Domain, Public and Private profiles
+  win_firewall:
+    state: disabled                                          # Disable firewall
+    profiles:
+      - Domain
+      - Private
+      - Public
+  tags: disable_firewall
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Reboot server
+  win_reboot:
+    msg: "Rebooting..."                                      # Reboot message
+    pre_reboot_delay: 5                                      # Delay before reboot in seconds
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Install Active Directory
+  win_feature:
+    name: AD-Domain-Services                                  # Feature name
+    include_management_tools: yes                             # Include management tools
+    include_sub_features: yes                                 # Include sub features
+    state: present                                            # Ensure the feature is present
+  register: result                                            # Register the result
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Create Domain
+  win_domain:
+    dns_domain_name: '{{ temp_ad_domain_name }}'              # DNS domain name
+    safe_mode_password: '{{ windows_template_password }}'     # Safe mode password
+  register: ad                                                # Register the result
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Reboot server
+  win_reboot:
+    msg: "Installing AD. Rebooting..."                        # Reboot message
+    pre_reboot_delay: 5                                       # Delay before reboot in seconds
+  when: ad.changed                                            # Reboot if AD installation changed
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Set internal DNS server 
+  win_dns_client:
+    adapter_names: '*'                                        # Adapter name pattern
+    ipv4_addresses:
+      - '127.0.0.1'                                           # Internal DNS server address
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Create reverse DNS zone
+  win_shell: "Add-DnsServerPrimaryZone -NetworkID {{ network_address }} -ReplicationScope Forest"  # Command to create reverse DNS zone
+  delegate_to: '{{ inventory_hostname }}'
+  retries: 30                                                 # Number of retries
+  delay: 60                                                   # Delay between retries in seconds
+  register: result                                            # Register the result
+  until: result is succeeded                                  # Retry until succeeded
+
+- name: Copy General PowerShell Scripts
+  win_copy:
+    src: tasks/vmware_create_windows_server2022dc_de_ad/scripts/powershell/general_scripts  # Source path
+    dest: C:/                                                  # Destination path
+
+- name: Copy AD PowerShell Scripts
+  win_copy:
+    src: tasks/vmware_create_windows_server2022dc_de_ad/scripts/powershell/ad_scripts       # Source path
+    dest: C:/                                                  # Destination path
+
+- name: Enable Remote Desktop
+  win_command: powershell.exe -ExecutionPolicy ByPass -File C:/general_scripts/enable_rdp.ps1  # Command to enable Remote Desktop
+
+- name: Remove general_scripts folder
+  win_file:
+    path: C:/general_scripts                                   # Path to remove
+    state: absent                                              # Ensure the path is absent
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Remove ad_scripts folder
+  win_file:
+    path: C:/ad_scripts                                        # Path to remove
+    state: absent                                              # Ensure the path is absent
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Remove enable_winrm.ps1 file
+  win_file:
+    path: C:/enable_winrm.ps1                                  # Path to remove
+    state: absent                                              # Ensure the path is absent
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Enable firewall for Domain, Public and Private profiles
+  win_firewall:
+    state: enabled                                             # Enable firewall
+    profiles:
+      - Domain
+      - Private
+      - Public
+  tags: enable_firewall
+  delegate_to: '{{ inventory_hostname }}'
+
+- name: Set New Domain Administrator Password
+  win_user:
+    name: administrator                                        # Username
+    password: "{{ windows_template_password }}"                # New password
+    state: present                                             # Ensure the user is present
+  delegate_to: '{{ inventory_hostname }}'
+  ignore_errors: True                                          # Ignore errors

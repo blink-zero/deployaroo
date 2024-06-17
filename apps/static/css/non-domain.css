@@ -1,0 +1,144 @@
+.form-control {
+    border-radius: 0.25rem;
+    box-shadow: none;
+    border: 1px solid #ced4da;
+}
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+.btn-primary:focus, .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+}
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+.btn-danger:focus, .btn-danger.focus {
+    box-shadow: 0 0 0 0.2rem rgba(225,83,97,.5);
+}
+.card {
+    border-radius: 0.5rem;
+}
+.card-header {
+    border-bottom: 1px solid #e9ecef;
+}
+.card-body {
+    padding: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-text {
+    color: #6c757d;
+}
+.settings-icon {
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #007bff;
+}
+.settings-icon:hover {
+    color: #0056b3;
+}
+.modal-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.delete-button, .settings-button {
+    margin-right: 10px;
+}
+.form-check-input {
+    width: 40px;
+    height: 20px;
+    background-color: #1abc9c;
+    border-radius: 20px;
+    position: relative;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.form-check-input:checked {
+    background-color: #1abc9c;
+}
+.form-check-input::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+.form-check-input:checked::before {
+    transform: translateX(20px);
+}
+.form-check-label {
+    color: white;
+    margin-left: 10px; /* Ensure there is space between the switch and label */
+}
+.staged-vms-panel {
+    position: fixed;
+    top: 60px;
+    right: -300px;
+    width: 300px;
+    height: 100%;
+    background-color: #f8f9fa;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+    transition: right 0.3s;
+    padding: 20px;
+    overflow-y: auto;
+}
+.staged-vms-panel h4 {
+    margin-top: 0;
+}
+.list-group {
+    margin-bottom: 20px;
+}
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.wrapper {
+    display: flex;
+    transition: margin-right 0.3s;
+}
+.content {
+    flex-grow: 1;
+}
+.vm-image {
+    width: 50px;
+    height: 50px;
+}
+.vm-image-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.card-details p {
+    font-size: 0.95rem;
+    color: #6c757d;
+}
+
+.vm-image-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}

@@ -1,0 +1,75 @@
+{% extends "layouts/base-nonav.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center flex-grow-1">
+  <div class="auth-content">
+    <div class="card shadow-lg p-4" style="border-radius: 15px;">
+      <div class="card-body text-center">
+        <div class="mb-4">
+          <img class="brand mb-3" src="{{ url_for('static', filename='logo/deployaroo_text_lightgrey.png') }}" alt="Brand Logo" class="img-fluid" style="max-width: 200px;">
+          <br>
+          <span class="text-muted" style="font-size: 10px;">
+            <b>A <a href="https://github.com/blink-zero" class="text-decoration-none">blink-zero</a> project</b>
+          </span>
+        </div>
+        <form method="POST">
+          <div class="mb-3">
+            <input type="text" class="form-control" name="user_id" placeholder="Username" aria-label="Username" required>
+          </div>
+          <div class="mb-3 position-relative">
+            <input type="password" class="form-control" name="password" placeholder="Password" aria-label="Password" required>
+            <button class="btn btn-outline-secondary position-absolute end-0 top-50 translate-middle-y me-2" type="button" id="togglePassword" aria-label="Show password"><i class="fas fa-eye"></i></button>
+          </div>
+          <!-- <div class="mb-3 text-end">
+            <a href="#" class="text-decoration-none">Forgot your password?</a>
+          </div> -->
+          <button class="btn btn-primary w-100 shadow-2 mb-4" type="submit" id="loginButton" style="border-radius: 5px;">
+            <span id="buttonText">Login</span>
+            <span id="buttonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          </button>
+          {% if error %}
+          <div class="alert alert-danger mt-3" role="alert">
+            Error: {{ error }}
+          </div>
+          {% endif %}
+        </form>
+        <div class="mt-4">
+          <span class="text-muted" style="font-size: 12px;">Application Version: 1.0.0beta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include necessary scripts -->
+<script src="{{ url_for('static', filename='vendor/jquery3/jquery-3.4.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/toastr/toastr.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/fontawesome5/js/all.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+  $(document).ready(function() {
+    $('input[name="user_id"]').focus();
+
+    $('#togglePassword').click(function() {
+      var passwordField = $('input[name="password"]');
+      var passwordFieldType = passwordField.attr('type');
+      if (passwordFieldType == 'password') {
+        passwordField.attr('type', 'text');
+        $(this).html('<i class="fas fa-eye-slash"></i>');
+      } else {
+        passwordField.attr('type', 'password');
+        $(this).html('<i class="fas fa-eye"></i>');
+      }
+    });
+
+    $('form').submit(function() {
+      $('#buttonText').addClass('d-none');
+      $('#buttonSpinner').removeClass('d-none');
+      $('#loginButton').prop('disabled', true);
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+# Log files
+logs/
+*.log
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
+.env
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+
+# Databases
+*.sqlite3
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+*.sql
+
+# Swap files
+*.swp
+
+# Docker Compose files
+docker-compose.yml
+docker-compose.yaml
+
+# Application-specific
+instance/
+apps/log/app.log
+
+# Backups
+apps/backups

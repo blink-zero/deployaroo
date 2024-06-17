@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+{% block title %} History {% endblock %}
+{% block content %}
+
+<!-- Link to the external CSS file -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+
+<div class="wrapper d-flex">
+  <div id="sidebar">{% include 'includes/sidebar.html' %}</div>
+  <div id="body" class="flex-grow-1 d-flex flex-column">
+    {% include 'includes/navbar.html' %}
+    <div class="content flex-grow-1 p-4">
+      <div class="container-fluid">
+        <div class="page-title">
+          <h3>History</h3>
+        </div>
+        <div class="row">
+          <div class="col-md-12 col-lg-12">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Previously Built Virtual Machines</span>
+                <button class="btn btn-sm btn-secondary" onclick="refreshPage()">
+                  Refresh Table <i class="fas fa-sync"></i>
+                </button>
+              </div>
+              <div class="card-body">
+                <form method="GET" action="{{ url_for('home_blueprint.history') }}">
+                  <div class="row mb-3">
+                    <div class="col-md-4">
+                      <input
+                        type="text"
+                        name="search"
+                        id="searchInput"
+                        class="form-control"
+                        placeholder="Search..."
+                        value="{{ search_query }}"
+                      />
+                    </div>
+                    <div class="col-md-2">
+                      <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                  </div>
+                </form>
+                <p class="text-muted">
+                  You can search by Hostname, IP Address, Image Type, and Environment.
+                </p>
+
+                {% if data.items %}
+                <div class="table-responsive">
+                  <table class="table table-hover table-bordered" id="dataTable">
+                    <thead>
+                      <tr>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='id', order='asc' if sort_order == 'desc' else 'desc') }}">#</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='starttime', order='asc' if sort_order == 'desc' else 'desc') }}">Start</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='status', order='asc' if sort_order == 'desc' else 'desc') }}">State</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='ipaddress', order='asc' if sort_order == 'desc' else 'desc') }}">IP Address</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='hostname', order='asc' if sort_order == 'desc' else 'desc') }}">Hostname</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='imagetype', order='asc' if sort_order == 'desc' else 'desc') }}">Image</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='env', order='asc' if sort_order == 'desc' else 'desc') }}">Env</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='ram', order='asc' if sort_order == 'desc' else 'desc') }}">RAM</a></th>
+                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='time_taken', order='asc' if sort_order == 'desc' else 'desc') }}">Time Taken</a></th>
+                        <th>Log</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in data.items %}
+                      <tr>
+                        <td>{{ row.id }}</td>
+                        <td>{{ row.formatted_starttime }}</td>
+                        <td class="state-icon">
+                          {% if row.status == 'Completed' %}
+                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> {{ row.status }}</span>
+                          {% elif row.status == 'Running' %}
+                            <span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> {{ row.status }}</span>
+                          {% elif row.status == 'Failed' %}
+                            <span class="badge bg-danger"><i class="fas fa-times-circle"></i> {{ row.status }}</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ row.ipaddress }}</td>
+                        <td>{{ row.hostname }}</td>
+                        <td>{{ row.imagetype }}</td>
+                        <td>{{ row.env }}</td>
+                        <td>{{ row.ram }}</td>
+                        <td>
+                          {% if row.time_taken %}
+                            {{ row.time_taken }}
+                          {% else %}
+                            N/A
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.ansible_log_path %}
+                            <button class="btn btn-link badge-view-log" onclick="viewLog({{ row.id }})"><i class="fas fa-file-alt"></i> View Log</button>
+                          {% else %}
+                            N/A
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <p>No records found</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pagination justify-content-center mt-4">
+      {{ data.items | length }} records shown.
+      <span class="mx-3">{{ pagination.info }}</span>
+      <nav>
+        <ul class="pagination">
+          {% if data.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=data.prev_num) }}">Previous</a>
+          </li>
+          {% endif %}
+          {% for p in data.iter_pages() %}
+          {% if p %}
+          <li class="page-item {% if p == data.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=p) }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+          {% endfor %}
+          {% if data.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=data.next_num) }}">Next</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for displaying logs -->
+<div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" style="max-width: 80%;">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="logModalLabel">Ansible Log</h5>
+        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <pre><code id="logContent" class="language-ansible"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function refreshPage() {
+    location.reload();
+  }
+
+  function viewLog(historyId) {
+    fetch(`/ansible_log/${historyId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.log_content) {
+          document.getElementById('logContent').textContent = data.log_content;
+          Prism.highlightAll();
+          new bootstrap.Modal(document.getElementById('logModal')).show();
+        } else {
+          toastr.error('Log content not found.');
+        }
+      })
+      .catch(() => {
+        toastr.error('Failed to fetch log content.');
+      });
+  }
+</script>
+
+{% include 'includes/toastr.html' %}
+
+{% endblock content %}

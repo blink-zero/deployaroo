@@ -1,0 +1,30 @@
+{% extends "layouts/base.html" %}
+{% block title %} Error {% endblock %}
+{% block content %}
+
+<div class="content">
+  <div class="container">
+    <div class="row pt-5">
+      <div class="col-md-6 mt-5 offset-md-3 pt-5 mt-5">
+        <div class="card">
+          <div class="card-header text-center py-4">
+            <img src="{{ url_for('static', filename='images/error.png') }}" class="app-logo" width="200px" height="200px" style="padding-bottom: 30px;">
+            <h3 class="title">Error 404</h3>
+          </div>
+          <div class="card-body px-2 py-2">
+            <p class="text-center">
+              Page not found. The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            </p>
+            <p class="text-center">
+              <a href="{{ url_for('home_blueprint.home') }}" class="btn btn-primary">Go Back</a>
+            </p>
+            <p class="text-center">
+              <a href="{{ url_for('home_blueprint.home') }}" class="btn btn-secondary">Return to Home</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

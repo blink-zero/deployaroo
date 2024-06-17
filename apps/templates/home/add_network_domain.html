@@ -1,0 +1,195 @@
+{% extends "layouts/base.html" %}
+{% block title %} Add Network (Domain) {% endblock %}
+{% block content %}
+<div class="wrapper">
+    <div id="sidebar">{% include 'includes/sidebar.html' %}</div>
+    <div id="body">
+        {% include 'includes/navbar.html' %}
+        <div class="content">
+            <div class="container-fluid">
+                <div class="page-title text-center">
+                    <h3>Add Network (Domain)</h3>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                {% if vcenter_config %}
+                                <form method="POST" action="{{ url_for('home_blueprint.add_network_domain') }}">
+                                    <div class="form-group">
+                                        <label for="vm_network">VM Network:</label>
+                                        <select class="form-control" name="vm_network" id="vm_network" required>
+                                            <option value="" selected disabled>Select a VM Network</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select an existing VM network.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="network_name">Network Name:</label>
+                                        <input type="text" class="form-control" name="network_name" id="network_name" required>
+                                        <small class="form-text text-muted">Provide a name for the network. It will be automatically filled based on your selection but can be edited if necessary.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="network_address">Network Address (CIDR):</label>
+                                        <input type="text" class="form-control" name="network_address" id="network_address" placeholder="Enter Network Address">
+                                        <small class="form-text text-muted">Enter the network address in CIDR format (e.g., 192.168.1.0/24).</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subnet_mask">Subnet Mask:</label>
+                                        <input type="text" class="form-control" name="subnet_mask" id="subnet_mask" placeholder="Enter Subnet Mask">
+                                        <small class="form-text text-muted">Enter the subnet mask (e.g., 255.255.255.0).</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gateway">Gateway Address:</label>
+                                        <input type="text" class="form-control" name="gateway" id="gateway" placeholder="Enter Gateway">
+                                        <small class="form-text text-muted">Enter the gateway IP address.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dns_1">DNS Server 1:</label>
+                                        <input type="text" class="form-control" name="dns_1" id="dns_1" placeholder="Enter DNS Server 1">
+                                        <small class="form-text text-muted">Enter DNS server 1 IP address.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dns_2">DNS Server 2:</label>
+                                        <input type="text" class="form-control" name="dns_2" id="dns_2" placeholder="Enter DNS Server 2">
+                                        <small class="form-text text-muted">Enter DNS server 2 IP address.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vcenter_validate_certs">Validate Certificates:</label>
+                                        <select class="form-control" name="vcenter_validate_certs" id="vcenter_validate_certs">
+                                            <option value="false">False</option>
+                                            <option value="true">True</option>
+                                        </select>
+                                        <small class="form-text text-muted">Check to validate SSL certificates.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vcenter_datacenter">Datacenter:</label>
+                                        <select class="form-control" name="vcenter_datacenter" id="vcenter_datacenter" required>
+                                            <option value="" selected disabled>Select a Datacenter</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select a datacenter for the network.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vm_folder">VM Folder:</label>
+                                        <select class="form-control" name="vm_folder" id="vm_folder" required>
+                                            <option value="" selected disabled>Select a VM Folder</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select a folder for the virtual machines.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vm_disk_datastore">VM Disk Datastore:</label>
+                                        <select class="form-control" name="vm_disk_datastore" id="vm_disk_datastore" required>
+                                            <option value="" selected disabled>Select a Datastore</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select a datastore for virtual machine disks.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="domain_name">Domain Name:</label>
+                                        <input type="text" class="form-control" name="domain_name" id="domain_name" placeholder="Enter Domain Name" required>
+                                        <small class="form-text text-muted">Enter the domain name.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="domain_admin_user">Domain Admin User:</label>
+                                        <input type="text" class="form-control" name="domain_admin_user" id="domain_admin_user" placeholder="Enter Domain Admin User" required>
+                                        <small class="form-text text-muted">Enter the domain admin username.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="domain_admin_password">Domain Admin Password:</label>
+                                        <input type="password" class="form-control" name="domain_admin_password" id="domain_admin_password" placeholder="Enter Domain Admin Password" required>
+                                        <small class="form-text text-muted">Enter the domain admin password.</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">Create Network</button>
+                                </form>
+                                {% else %}
+                                <div class="alert alert-warning" role="alert">
+                                    <strong>Configuration Required:</strong> To add a domain network, please configure your VMware settings in the <a href="{{ url_for('settings_blueprint.settings_vmware') }}" class="alert-link">VMware Configuration</a> section of the settings.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Axios from CDN -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+<script src="{{ url_for('static', filename='vendor/axios/axios.min.js') }}"></script>
+<!-- Include jQuery library -->
+<!-- <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    axios.get('/get_vcenter_data')
+        .then(response => {
+            const data = response.data;
+            populateSelect('vm_network', 'vm_networks', data);
+            populateSelect('vcenter_datacenter', 'datacenters', data);
+            populateSelect('vm_folder', 'vm_folders', data);
+            populateSelect('vm_disk_datastore', 'datastores', data);
+        })
+        .catch(error => console.error('Error fetching vCenter data:', error));
+
+    function populateSelect(elementId, dataKey, data) {
+        const selectElement = document.getElementById(elementId);
+        const dataArray = data[dataKey] || [];
+
+        dataArray.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = item.name;
+            selectElement.appendChild(option);
+        });
+    }
+
+    $(document).ready(function () {
+        $('#vm_network').change(function () {
+            var selectedNetwork = $(this).val();
+            $('#network_name').val(selectedNetwork).prop('readonly', true);
+        });
+
+        $('#network_name').focus(function () {
+            $(this).prop('readonly', false);
+        });
+    });
+});
+</script>
+
+<style>
+    .form-control {
+        border-radius: 0.25rem;
+        box-shadow: none;
+        border: 1px solid #ced4da;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+    .btn-primary:focus, .btn-primary.focus {
+        box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+    }
+    .card {
+        border-radius: 0.5rem;
+    }
+    .card-header {
+        border-bottom: 1px solid #e9ecef;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-text {
+        color: #6c757d;
+    }
+</style>
+{% endblock content %}
