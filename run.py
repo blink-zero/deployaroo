@@ -1,8 +1,11 @@
+from datetime import datetime
+import time
 import json
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 from flask_migrate import Migrate
-from flask import render_template
+from flask import render_template, session
 from apps.config import config_dict, Config
 from apps.home.util import get_esxi_ip, is_reachable
 from apps.models import User, Group, DefaultVmSettingsModel, ConfigModel, NonDomainModel, DomainModel
@@ -125,5 +128,68 @@ with app.app_context():
 
     db.session.commit()
 
+# Set up logging
+log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# Custom JSON log formatter
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "user": getattr(record, 'user', 'anonymous'),
+            **getattr(record, 'extra', {})
+        }
+        return json.dumps(log_record)
+
+# Handler for app.log (standard logs)
+file_handler = TimedRotatingFileHandler('logs/app.log', when='midnight', interval=1, backupCount=30)
+file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.INFO)
+
+# Handler for app_json.log (JSON logs)
+json_file_handler = TimedRotatingFileHandler('logs/app_json.log', when='midnight', interval=1, backupCount=30)
+json_file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+json_file_handler.setFormatter(JSONFormatter())
+json_file_handler.setLevel(logging.INFO)
+
+# Adding handlers to the Flask app logger
+app.logger.addHandler(file_handler)
+
+# Custom JSON logger
+json_logger = logging.getLogger('json_logger')
+json_logger.setLevel(logging.INFO)
+json_logger.addHandler(json_file_handler)
+
+# Custom JSON encoder for logging
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
+        return super().default(obj)
+
+def log_json(level, message, **kwargs):
+    log_entry = {
+        "level": level,
+        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "user": session.get('username', 'anonymous'),
+        "message": message,
+        **kwargs
+    }
+    json_logger.info(json.dumps(log_entry, cls=CustomJSONEncoder))
+
+# Clean up old log files
+log_directory = 'logs'
+log_retention_days = 30
+
+for log_file in os.listdir(log_directory):
+    file_path = os.path.join(log_directory, log_file)
+    if os.path.isfile(file_path):
+        file_creation_time = os.path.getctime(file_path)
+        if (time.time() - file_creation_time) // (24 * 3600) >= log_retention_days:
+            os.remove(file_path)
+            
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
