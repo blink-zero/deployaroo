@@ -34,7 +34,7 @@ class DomainModel(db.Model):
 @event.listens_for(DomainModel, 'before_insert')
 def generate_domain_designation(mapper, connection, target):
     last_designation = connection.scalar(
-        select([DomainModel.designation]).order_by(db.desc(DomainModel.id)).limit(1)
+         select(DomainModel.designation).order_by(db.desc(DomainModel.id)).limit(1)
     )
 
     if last_designation:

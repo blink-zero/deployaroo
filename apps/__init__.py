@@ -20,10 +20,14 @@ def register_extensions(app):
 
 # Function to configure database
 def configure_database(app):
+    initialized = False
 
-    @app.before_first_request
+    @app.before_request
     def initialize_database():
-        db.create_all()
+        nonlocal initialized
+        if not initialized:
+            db.create_all()
+            initialized = True
 
     @app.teardown_request
     def shutdown_session(exception=None):
