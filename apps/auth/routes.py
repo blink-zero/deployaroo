@@ -4,17 +4,7 @@ from flask import Blueprint, redirect, render_template, request, url_for, sessio
 from flask_login import login_user, logout_user, login_required, current_user
 from apps.auth import blueprint
 from apps.models import User
-import json
-
-def log_json(level, message, **kwargs):
-    log_entry = {
-        "level": level,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "user": session.get('username', 'anonymous'),
-        "message": message,
-        **kwargs
-    }
-    logging.getLogger('json_logger').info(json.dumps(log_entry))
+from apps.utils.logging import log_json
 
 @blueprint.route('/', methods=['GET', 'POST'])
 @blueprint.route('/login', methods=['GET', 'POST'])

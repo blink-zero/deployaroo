@@ -16,6 +16,7 @@ import configparser
 import ansible_runner
 import yaml
 import json
+from apps.utils.logging import log_json
 
 
 def model_to_dict(instance):
@@ -193,16 +194,6 @@ def get_config_domain(domain_item):
 def set_environment_variables(config):
     for var_name, var_value in config.items():
         os.environ[var_name.upper()] = var_value
-
-def log_json(level, message, **kwargs):
-    log_entry = {
-        "level": level,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "user": session.get('username', 'anonymous'),
-        "message": message,
-        **kwargs
-    }
-    logging.getLogger('json_logger').info(json.dumps(log_entry))
 
 def create_yaml_file_from_designation(designation):
     yaml_file_path = 'apps/plugins/ansible-deploy-vm/vars/other.yml'
