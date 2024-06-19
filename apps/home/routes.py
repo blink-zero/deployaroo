@@ -35,32 +35,7 @@ from apps import db
 import uuid
 
 from apps.models.vm_image_model import VmImageModel
-
-# Configure logging to use JSON format
-logging.basicConfig(level=logging.INFO, format='%(message)s')
-logger = logging.getLogger()
-
-# Configure separate file handlers for JSON logs and console logs
-json_handler = logging.FileHandler('logs/app_json.log')
-json_handler.setLevel(logging.INFO)
-json_handler.setFormatter(logging.Formatter('%(message)s'))
-json_logger = logging.getLogger('json_logger')
-json_logger.addHandler(json_handler)
-
-console_handler = logging.FileHandler('logs/app.log')
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-logger.addHandler(console_handler)
-
-def log_json(level, message, **kwargs):
-    log_entry = {
-        "level": level,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "user": session.get('username', 'anonymous'),
-        "message": message,
-        **kwargs
-    }
-    logging.getLogger('json_logger').info(json.dumps(log_entry))
+from apps.utils.logging import log_json
 
 def admin_required(func):
     @wraps(func)

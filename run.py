@@ -11,6 +11,7 @@ from apps.home.util import get_esxi_ip, is_reachable
 from apps.models import User, Group, DefaultVmSettingsModel, ConfigModel, NonDomainModel, DomainModel
 from apps import create_app, db
 from werkzeug.security import generate_password_hash
+from apps.utils.logging import log_json, JSONFormatter
 
 # Initialize directories
 required_dirs = [
@@ -131,18 +132,6 @@ with app.app_context():
 # Set up logging
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-# Custom JSON log formatter
-class JSONFormatter(logging.Formatter):
-    def format(self, record):
-        log_record = {
-            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            "level": record.levelname,
-            "message": record.getMessage(),
-            "user": getattr(record, 'user', 'anonymous'),
-            **getattr(record, 'extra', {})
-        }
-        return json.dumps(log_record)
-
 # Handler for app.log (standard logs)
 file_handler = TimedRotatingFileHandler('logs/app.log', when='midnight', interval=1, backupCount=30)
 file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
@@ -162,23 +151,6 @@ app.logger.addHandler(file_handler)
 json_logger = logging.getLogger('json_logger')
 json_logger.setLevel(logging.INFO)
 json_logger.addHandler(json_file_handler)
-
-# Custom JSON encoder for logging
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, bytes):
-            return obj.decode('utf-8')
-        return super().default(obj)
-
-def log_json(level, message, **kwargs):
-    log_entry = {
-        "level": level,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "user": session.get('username', 'anonymous'),
-        "message": message,
-        **kwargs
-    }
-    json_logger.info(json.dumps(log_entry, cls=CustomJSONEncoder))
 
 # Clean up old log files
 log_directory = 'logs'
