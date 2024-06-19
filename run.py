@@ -42,7 +42,7 @@ with app.app_context():
     password = Config.APP_ADMIN_PASSWORD
 
     # Check if the admin user exists in the database
-    existing_user = User.query.filter_by(username=username).first()
+    existing_user = db.session.query(User).filter_by(username=username).first()
     if existing_user:
         # If the user exists, update the password hash
         existing_user.set_password(password)
@@ -81,7 +81,7 @@ with app.app_context():
     db.create_all()
 
     # Check if default settings already exist
-    existing_default_settings = DefaultVmSettingsModel.query.get(1)
+    existing_default_settings = db.session.get(DefaultVmSettingsModel, 1)
     if not existing_default_settings:
         # If not, create default settings with ID 1
         default_settings = DefaultVmSettingsModel(id=1)
