@@ -751,7 +751,6 @@ def import_data():
         'configmodel': ConfigModel,
         'nondomainmodel': NonDomainModel,
         'domainmodel': DomainModel,
-        'setupstatus': SetupStatus,
         'pluginmodel': PluginModel,
         'defaultvmsettingsmodel': DefaultVmSettingsModel,
     }
