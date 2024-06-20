@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 import time
 import json
 import logging
@@ -134,15 +135,19 @@ log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 # Handler for app.log (standard logs)
 file_handler = TimedRotatingFileHandler('logs/app.log', when='midnight', interval=1, backupCount=30)
-file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+file_handler.suffix = "%Y-%m-%d"
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)
 
 # Handler for app_json.log (JSON logs)
 json_file_handler = TimedRotatingFileHandler('logs/app_json.log', when='midnight', interval=1, backupCount=30)
-json_file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+json_file_handler.suffix = "%Y-%m-%d"
 json_file_handler.setFormatter(JSONFormatter())
 json_file_handler.setLevel(logging.INFO)
+
+# Clear existing handlers
+for handler in app.logger.handlers[:]:
+    app.logger.removeHandler(handler)
 
 # Adding handlers to the Flask app logger
 app.logger.addHandler(file_handler)
@@ -155,10 +160,11 @@ json_logger.addHandler(json_file_handler)
 # Clean up old log files
 log_directory = 'logs'
 log_retention_days = 30
+log_file_pattern = re.compile(r'app\.log\.\d{4}-\d{2}-\d{2}')
 
 for log_file in os.listdir(log_directory):
     file_path = os.path.join(log_directory, log_file)
-    if os.path.isfile(file_path):
+    if os.path.isfile(file_path) and log_file_pattern.match(log_file):
         file_creation_time = os.path.getctime(file_path)
         if (time.time() - file_creation_time) // (24 * 3600) >= log_retention_days:
             os.remove(file_path)

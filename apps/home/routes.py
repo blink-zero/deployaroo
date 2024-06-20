@@ -85,10 +85,10 @@ def logs():
 def download_log():
     log_json('INFO', 'Downloaded logs file')
     pwd = os.getcwd()
-    filepath = f'{pwd}/logs/app.log'
+    filepath = f'{pwd}/logs/app_json.log'
 
     if os.path.exists(filepath):
-        return send_file(filepath, as_attachment=True, attachment_filename='app.log')
+        return send_file(filepath, as_attachment=True, download_name='app_json.log')
     else:
         log_json('ERROR', 'Log file not found', path=filepath)
         abort(404)
