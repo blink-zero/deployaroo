@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import time
 import json
@@ -13,6 +13,7 @@ from apps.models import User, Group, DefaultVmSettingsModel, ConfigModel, NonDom
 from apps import create_app, db
 from werkzeug.security import generate_password_hash
 from apps.utils.logging import log_json, JSONFormatter
+import threading
 
 # Initialize directories
 required_dirs = [
@@ -135,13 +136,13 @@ log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 # Handler for app.log (standard logs)
 file_handler = TimedRotatingFileHandler('logs/app.log', when='midnight', interval=1, backupCount=30)
-file_handler.suffix = "%Y-%m-%d"
+file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)
 
 # Handler for app_json.log (JSON logs)
 json_file_handler = TimedRotatingFileHandler('logs/app_json.log', when='midnight', interval=1, backupCount=30)
-json_file_handler.suffix = "%Y-%m-%d"
+json_file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
 json_file_handler.setFormatter(JSONFormatter())
 json_file_handler.setLevel(logging.INFO)
 
@@ -160,7 +161,7 @@ json_logger.addHandler(json_file_handler)
 # Clean up old log files
 log_directory = 'logs'
 log_retention_days = 30
-log_file_pattern = re.compile(r'app\.log\.\d{4}-\d{2}-\d{2}')
+log_file_pattern = re.compile(r'app\.log\.\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}')
 
 for log_file in os.listdir(log_directory):
     file_path = os.path.join(log_directory, log_file)
@@ -168,6 +169,22 @@ for log_file in os.listdir(log_directory):
         file_creation_time = os.path.getctime(file_path)
         if (time.time() - file_creation_time) // (24 * 3600) >= log_retention_days:
             os.remove(file_path)
-            
+
+# Function to wait until the next midnight and log a message
+def log_at_midnight():
+    while True:
+        now = datetime.now()
+        # Calculate the time until the next midnight
+        next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        sleep_time = (next_midnight - now).total_seconds()
+        time.sleep(sleep_time)
+        app.logger.info("Midnight log entry to trigger log rotation.")
+        json_logger.info("Midnight JSON log entry to trigger log rotation.")
+
+# Start the midnight logging in a separate thread
+midnight_thread = threading.Thread(target=log_at_midnight)
+midnight_thread.daemon = True
+midnight_thread.start()
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
