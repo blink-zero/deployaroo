@@ -19,6 +19,7 @@ from flask import jsonify, render_template, redirect, request, session, url_for
 from flask import flash, send_from_directory
 from werkzeug.utils import secure_filename
 import zipfile
+from apps.utils.logging import log_json
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'zip'}
@@ -38,16 +39,6 @@ def admin_required(func):
             return render_template('error/403.html'), 403
         return func(*args, **kwargs)
     return decorated_view
-
-def log_json(level, message, **kwargs):
-    log_entry = {
-        "level": level,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "user": session.get('username', 'anonymous'),
-        "message": message,
-        **kwargs
-    }
-    logging.getLogger('json_logger').info(json.dumps(log_entry))
 
 @blueprint.route('/settings')
 @login_required
@@ -760,7 +751,6 @@ def import_data():
         'configmodel': ConfigModel,
         'nondomainmodel': NonDomainModel,
         'domainmodel': DomainModel,
-        'setupstatus': SetupStatus,
         'pluginmodel': PluginModel,
         'defaultvmsettingsmodel': DefaultVmSettingsModel,
     }

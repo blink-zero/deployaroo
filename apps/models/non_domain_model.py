@@ -19,7 +19,7 @@ class NonDomainModel(db.Model):
 @event.listens_for(NonDomainModel, 'before_insert')
 def generate_nondomain_designation(mapper, connection, target):
     last_designation = connection.scalar(
-        select([NonDomainModel.designation]).order_by(db.desc(NonDomainModel.id)).limit(1)
+         select(NonDomainModel.designation).order_by(db.desc(NonDomainModel.id)).limit(1)
     )
 
     if last_designation:
