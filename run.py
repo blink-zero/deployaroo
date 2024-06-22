@@ -3,7 +3,6 @@ import re
 import time
 import json
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import os
 from flask_migrate import Migrate
 from flask import render_template, session
@@ -134,15 +133,15 @@ with app.app_context():
 # Set up logging
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-# Handler for app.log (standard logs)
-file_handler = TimedRotatingFileHandler('logs/app.log', when='midnight', interval=1, backupCount=30)
-file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+# Separate log files for regular and JSON logs
+log_file_path = 'logs/app.log'
+json_log_file_path = 'logs/app_json.log'
+
+file_handler = logging.FileHandler(log_file_path)
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)
 
-# Handler for app_json.log (JSON logs)
-json_file_handler = TimedRotatingFileHandler('logs/app_json.log', when='midnight', interval=1, backupCount=30)
-json_file_handler.suffix = "%Y-%m-%d_%H-%M-%S"
+json_file_handler = logging.FileHandler(json_log_file_path)
 json_file_handler.setFormatter(JSONFormatter())
 json_file_handler.setLevel(logging.INFO)
 
@@ -158,33 +157,82 @@ json_logger = logging.getLogger('json_logger')
 json_logger.setLevel(logging.INFO)
 json_logger.addHandler(json_file_handler)
 
-# Clean up old log files
-log_directory = 'logs'
-log_retention_days = 30
-log_file_pattern = re.compile(r'app\.log\.\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}')
+# Flags to ensure only one instance of each thread is running
+log_cleanup_thread_running = False
+json_log_cleanup_thread_running = False
 
-for log_file in os.listdir(log_directory):
-    file_path = os.path.join(log_directory, log_file)
-    if os.path.isfile(file_path) and log_file_pattern.match(log_file):
-        file_creation_time = os.path.getctime(file_path)
-        if (time.time() - file_creation_time) // (24 * 3600) >= log_retention_days:
-            os.remove(file_path)
-
-# Function to wait until the next midnight and log a message
-def log_at_midnight():
+# Function to clean up old log entries
+def clean_old_log_entries(log_file, retention_days=30):
+    global log_cleanup_thread_running
+    log_cleanup_thread_running = True
     while True:
         now = datetime.now()
         # Calculate the time until the next midnight
         next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         sleep_time = (next_midnight - now).total_seconds()
         time.sleep(sleep_time)
-        app.logger.info("Midnight log entry to trigger log rotation.")
-        json_logger.info("Midnight JSON log entry to trigger log rotation.")
 
-# Start the midnight logging in a separate thread
-midnight_thread = threading.Thread(target=log_at_midnight)
-midnight_thread.daemon = True
-midnight_thread.start()
+        cutoff_date = datetime.now() - timedelta(days=retention_days)
+        with open(log_file, 'r') as f:
+            lines = f.readlines()
+
+        with open(log_file, 'w') as f:
+            for line in lines:
+                try:
+                    log_entry = json.loads(line)
+                    log_date = datetime.strptime(log_entry['timestamp'], '%Y-%m-%d %H:%M:%S')
+                    if log_date > cutoff_date:
+                        f.write(line)
+                except json.JSONDecodeError:
+                    # Handle non-JSON formatted logs
+                    match = re.match(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
+                    if match:
+                        log_date = datetime.strptime(match.group(1), '%Y-%m-%d %H:%M:%S')
+                        if log_date > cutoff_date:
+                            f.write(line)
+    log_cleanup_thread_running = False
+
+# Function to clean up old JSON log entries
+def clean_old_json_log_entries(log_file, retention_days=30):
+    global json_log_cleanup_thread_running
+    json_log_cleanup_thread_running = True
+    while True:
+        now = datetime.now()
+        # Calculate the time until the next midnight
+        next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        sleep_time = (next_midnight - now).total_seconds()
+        time.sleep(sleep_time)
+
+        cutoff_date = datetime.now() - timedelta(days=retention_days)
+        with open(log_file, 'r') as f:
+            lines = f.readlines()
+
+        with open(log_file, 'w') as f:
+            for line in lines:
+                try:
+                    log_entry = json.loads(line)
+                    log_date = datetime.strptime(log_entry['timestamp'], '%Y-%m-%d %H:%M:%S')
+                    if log_date > cutoff_date:
+                        f.write(line)
+                except json.JSONDecodeError:
+                    # Handle non-JSON formatted logs
+                    match = re.match(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
+                    if match:
+                        log_date = datetime.strptime(match.group(1), '%Y-%m-%d %H:%M:%S')
+                        if log_date > cutoff_date:
+                            f.write(line)
+    json_log_cleanup_thread_running = False
+
+# Start the log cleanup in a separate thread if not already running
+if not log_cleanup_thread_running:
+    log_cleanup_thread = threading.Thread(target=clean_old_log_entries, args=(log_file_path,))
+    log_cleanup_thread.daemon = True
+    log_cleanup_thread.start()
+
+if not json_log_cleanup_thread_running:
+    json_log_cleanup_thread = threading.Thread(target=clean_old_json_log_entries, args=(json_log_file_path,))
+    json_log_cleanup_thread.daemon = True
+    json_log_cleanup_thread.start()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
