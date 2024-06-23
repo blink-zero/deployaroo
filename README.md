@@ -5,9 +5,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/blink-zero/deployaroo/actions">
-    <img src="https://github.com/blink-zero/deployaroo/workflows/CI/badge.svg" alt="CI">
-  </a>
   <a href="https://github.com/blink-zero/deployaroo/releases">
     <img src="https://img.shields.io/github/v/release/blink-zero/deployaroo" alt="Release">
   </a>
