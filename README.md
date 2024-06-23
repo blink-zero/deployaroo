@@ -1,5 +1,3 @@
-# Welcome to Deployaroo
-
 <p align="center">
   <img src="apps/static/logo/deployaroo_text_lightgrey.png" alt="Deployaroo Logo" width="400px">
 </p>
