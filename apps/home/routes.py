@@ -1,3 +1,13 @@
+from io import BytesIO, StringIO
+from flask import make_response
+from apps.settings.util import send_discord_notification
+from apps.vmware.routes import get_vm_by_name, get_vmware_connection
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, Spacer
+import csv
 import os
 import time
 import json
@@ -36,6 +46,8 @@ import uuid
 
 from apps.models.vm_image_model import VmImageModel
 from apps.utils.logging import log_json
+from pyVim import connect
+from pyVmomi import vim
 
 def admin_required(func):
     @wraps(func)
@@ -215,6 +227,65 @@ def history():
 
     return render_template('home/history.html', data=data, pagination=pagination, search_query=search_query, sort_column=sort_column, sort_order=sort_order)
 
+@blueprint.route('/restart_vm/<int:vm_id>', methods=['POST'])
+@login_required
+@admin_required
+def restart_vm(vm_id):
+    try:
+        vm_record = History.query.get(vm_id)
+        if not vm_record:
+            log_json('ERROR', f'VM not found in database for ID: {vm_id}')
+            return jsonify({'success': False, 'message': 'VM not found in database.'}), 404
+
+        si = get_vmware_connection()
+        content = si.RetrieveContent()
+        vm = get_vm_by_name(content, vm_record.hostname)
+
+        if not vm:
+            log_json('ERROR', f'VM not found in VMware: {vm_record.hostname}')
+            return jsonify({'success': False, 'message': 'VM not found in VMware.'}), 404
+
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
+            task = vm.PowerOn()
+        else:
+            task = vm.ResetVM_Task()
+
+        log_json('INFO', f'VM restart initiated for VM: {vm_record.hostname}')
+        return jsonify({'success': True, 'message': 'VM restart initiated successfully.'})
+    except Exception as e:
+        log_json('ERROR', f'Failed to restart VM ID: {vm_id}', error=str(e))
+        return jsonify({'success': False, 'message': f'Failed to restart VM: {str(e)}'}), 500
+    finally:
+        if 'si' in locals():
+            connect.Disconnect(si)
+
+@blueprint.route('/vm_details/<int:vm_id>')
+@login_required
+@admin_required
+def vm_details(vm_id):
+    try:
+        # Fetch the VM details from your database
+        vm = History.query.get(vm_id)
+        if vm:
+            details = {
+                'hostname': vm.hostname,
+                'ipaddress': vm.ipaddress,
+                'imagetype': vm.imagetype,
+                'env': vm.env,
+                'cpu': vm.cpu,
+                'ram': vm.ram,
+                'status': vm.status,
+                'starttime': vm.starttime,
+                'endtime': vm.endtime,
+            }
+            log_json('INFO', f'VM details retrieved for VM ID: {vm_id}')
+            return jsonify(details)
+        else:
+            log_json('ERROR', f'VM not found for ID: {vm_id}')
+            return jsonify({'error': 'VM not found'}), 404
+    except Exception as e:
+        log_json('ERROR', f'Error fetching VM details for VM ID: {vm_id}', error=str(e))
+        return jsonify({'error': 'Failed to fetch VM details'}), 500
 
 def handle_item_id(environment, item_id):
     if environment == 'other' and item_id:
@@ -369,6 +440,13 @@ def create_machine(environment):
         playbook_thread.start()
 
     log_json('INFO', 'Playbook execution started', environment=environment)
+
+    config = ConfigModel.query.first()
+    if config:
+        for client_machine in client_machines:
+            hostname = client_machine['hostname']
+            if config.notify_completed:
+                send_discord_notification(f"Build started for VM: {hostname}")
 
     return redirect('/home')
 
@@ -721,3 +799,76 @@ def get_settings_non_domain():
     }
 
     return jsonify(settings)
+
+@blueprint.route('/export_history_csv')
+@login_required
+def export_history_csv():
+    data = History.query.all()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'Start Time', 'End Time', 'Status', 'IP Address', 'Hostname', 'Image Type', 'CPU', 'RAM', 'Environment'])
+    
+    # Write data
+    for row in data:
+        writer.writerow([row.id, row.starttime, row.endtime, row.status, row.ipaddress, row.hostname, row.imagetype, row.cpu, row.ram, row.env])
+    
+    output.seek(0)
+    
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=deployaroo_history_export.csv"}
+    )
+
+@blueprint.route('/export_history_pdf')
+@login_required
+def export_history_pdf():
+    data = History.query.all()
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph("VM Build History", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Prepare data for the table
+    table_data = [['ID', 'Start Time', 'End Time', 'Status', 'IP Address', 'Hostname', 'Image Type', 'CPU', 'RAM', 'Environment']]
+    for row in data:
+        table_data.append([str(row.id), row.starttime, row.endtime, row.status, row.ipaddress, row.hostname, row.imagetype, str(row.cpu), str(row.ram), row.env])
+
+    # Create the table
+    table = Table(table_data)
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 12),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ])
+    table.setStyle(style)
+    elements.append(table)
+
+    # Build the PDF
+    doc.build(elements)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name='deployaroo_history_export.pdf',
+        mimetype='application/pdf'
+    )

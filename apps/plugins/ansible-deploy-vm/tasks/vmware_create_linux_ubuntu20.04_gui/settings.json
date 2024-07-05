@@ -4,6 +4,6 @@
     "image_type": "linux",
     "ansible_match_name": "lin_ubuntu20.04_gui",
     "vmware_os_type": "ubuntu64Guest",
-    "image_icon_name": "linux-ubuntu.png",
+    "image_icon_name": "UBT.png",
     "network_type": "ansible-deploy-vm"
 }

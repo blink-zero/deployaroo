@@ -1,144 +1,455 @@
-.form-control {
-    border-radius: 0.25rem;
+:root {
+    --bg-dark: #1e1f21;
+    --bg-card: #212529;
+    --bg-secondary: #2c3e50;
+    --text-light: #e4e6eb;
+    --text-muted: #94a3b8;
+    --border-color: #3a3b3d;
+    --accent-color: #1abc9c;
+    --input-bg: #2c3e50;
+    --danger-color: #ef4444;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+}
+
+html, body, .wrapper, #body {
+    height: 100%;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapper {
+    display: flex;
+    flex: 1;
+}
+
+#body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
     box-shadow: none;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-light);
+    transition: all 0.3s ease;
 }
-.form-control:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    border-color: var(--accent-color);
 }
+
+.btn {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
 .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
 }
-.btn-primary:hover {
-    background-color: #0056b3;
-    border-color: #004085;
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #16a085;
+    border-color: #16a085;
 }
-.btn-primary:focus, .btn-primary.focus {
-    box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
-}
+
 .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
 }
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+
+.btn-danger:hover, .btn-danger:focus {
+    background-color: #dc2626;
+    border-color: #dc2626;
 }
-.btn-danger:focus, .btn-danger.focus {
-    box-shadow: 0 0 0 0.2rem rgba(225,83,97,.5);
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
 }
+
+.btn-success:hover, .btn-success:focus {
+    background-color: #059669;
+    border-color: #059669;
+}
+
 .card {
-    border-radius: 0.5rem;
+    border-radius: 15px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
+
+.vmcard {
+    border: 1px solid var(--border-color) !important;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 .card-header {
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
 }
+
 .card-body {
     padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
 }
+
 .form-group {
     margin-bottom: 1.5rem;
 }
+
 .form-text {
-    color: #6c757d;
+    color: var(--text-muted);
 }
+
 .settings-icon {
     font-size: 1.5em;
     cursor: pointer;
-    color: #007bff;
+    color: var(--accent-color);
+    transition: color 0.3s ease;
 }
+
 .settings-icon:hover {
-    color: #0056b3;
+    color: #16a085;
 }
+
 .modal-body {
     max-height: 400px;
     overflow-y: auto;
+    background-color: var(--bg-card);
+    color: var(--text-light);
 }
+
 .delete-button, .settings-button {
     margin-right: 10px;
 }
-.form-check-input {
-    width: 40px;
-    height: 20px;
-    background-color: #1abc9c;
-    border-radius: 20px;
-    position: relative;
+
+.form-check-input[type="checkbox"] {
+    width: 48px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    border: none;
     appearance: none;
+    -webkit-appearance: none;
     outline: none;
     cursor: pointer;
     transition: background-color 0.3s;
+    position: relative;
+    margin: 0;
 }
-.form-check-input:checked {
-    background-color: #1abc9c;
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: var(--accent-color);
 }
-.form-check-input::before {
+
+.form-check-input[type="checkbox"]::before {
     content: '';
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 14px;
-    height: 14px;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
     background-color: white;
     border-radius: 50%;
     transition: transform 0.3s;
 }
-.form-check-input:checked::before {
-    transform: translateX(20px);
+
+.form-check-input[type="checkbox"]:checked::before {
+    transform: translateX(24px);
 }
+
 .form-check-label {
-    color: white;
+    color: var(--text-light);
 }
+
 .staged-vms-panel {
     position: fixed;
-    top: 60px;
-    right: -300px;
-    width: 300px;
-    height: 100%;
-    background-color: #f8f9fa;
+    top: 52px; /* Adjust this value to match your navbar height */
+    right: -350px;
+    width: 350px;
+    height: calc(100% - 52px); /* Subtract the navbar height */
+    background-color: var(--bg-card);
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-    transition: right 0.3s;
+    transition: right 0.3s ease;
     padding: 20px;
     overflow-y: auto;
+    z-index: 1030;
 }
+
+.staged-vms-panel.active {
+    right: 0;
+}
+
 .staged-vms-panel h4 {
     margin-top: 0;
+    color: var(--text-light);
 }
+
 .list-group {
     margin-bottom: 20px;
 }
+
 .list-group-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-light);
 }
-.wrapper {
-    display: flex;
-    transition: margin-right 0.3s;
+
+.content.panel-open {
+    margin-right: 350px;
 }
-.content {
-    flex-grow: 1;
-}
+
 .vm-image {
     width: 50px;
     height: 50px;
 }
 
 .vm-image-icon {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     object-fit: cover;
     border-radius: 50%;
 }
 
 .card-details p {
     font-size: 0.95rem;
-    color: #6c757d;
+    color: var(--text-muted);
 }
 
-.vm-image-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
+.modal-content {
+    background-color: var(--bg-card);
+    color: var(--text-light);
+    border-radius: 15px;
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--border-color);
+}
+
+.btn-close {
+    color: var(--text-light);
+}
+
+input[type="checkbox"], input[type="radio"] {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+}
+
+select {
+    background-color: var(--input-bg);
+    color: var(--text-light);
+    border-color: var(--border-color);
+}
+
+::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+:-ms-input-placeholder {
+    color: var(--text-muted);
+}
+
+::-ms-input-placeholder {
+    color: var(--text-muted);
+}
+
+#togglePanelButton {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background-color: var(--bg-secondary);
+    color: var(--text-light);
+    border: none;
+    padding: 15px 10px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    z-index: 1031;
+    transition: all 0.3s ease;
+}
+
+#togglePanelButton:hover {
+    background-color: var(--accent-color);
+}
+
+.page-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.page-title h3 {
+    margin: 0;
+    color: var(--text-light);
+}
+
+.page-title .btn {
+    margin: 0;
+}
+
+.page-title .btn-group {
+    display: flex;
+    gap: 0; /* Remove the gap between buttons */
+}
+
+.page-title .btn-group .btn {
+    margin: 0; /* Remove any margin on the buttons */
+    border-radius: 0; /* Remove border radius for a seamless look */
+}
+
+.page-title .btn-group .btn:first-child {
+    border-top-left-radius: 8px; /* Add radius to the first button's left corners */
+    border-bottom-left-radius: 8px;
+}
+
+.page-title .btn-group .btn:last-child {
+    border-top-right-radius: 8px; /* Add radius to the last button's right corners */
+    border-bottom-right-radius: 8px;
+}
+
+hr.bg-secondary {
+    border-color: var(--border-color);
+    opacity: 0.5;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(26, 188, 156, 0.25);
+    border-color: var(--accent-color);
+}
+
+#stagedVmsList .card {
+    background-color: var(--bg-secondary);
+    border: none;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+#stagedVmsList .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#stagedVmsList .card-body {
+    padding: 1rem;
+}
+
+#stagedVmsList .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+#stagedVmsList .card-text {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+#stagedVmsList .vm-image-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 1rem;
+}
+
+.documentation-btn {
+    background-color: var(--warning-color);
+    color: var(--bg-dark);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.documentation-btn,
+.delete-button,
+.settings-button {
+    position: relative;
+    z-index: 1040;
+}
+
+.documentation-btn:hover {
+    background-color: #d97706;
+    /* transform: translateY(-2px); */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease;
+}
+
+#client-testing-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-title .btn-group {
+        margin-top: 1rem;
+    }
+
+    .staged-vms-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .content.panel-open {
+        margin-right: 0;
+    }
 }

@@ -1,8 +1,7 @@
 {% extends "layouts/base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Dashboard{% endblock %}
 {% block content %}
 
-<!-- Link to the external CSS file -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 
 <div class="wrapper d-flex">
@@ -12,181 +11,80 @@
     <div class="content flex-grow-1 d-flex flex-column">
       <div class="container-fluid">
         <div class="page-title">
-          <h3>Home</h3>
+          <h1 class="text-white mb-4">Dashboard</h1>
         </div>
-        <div class="row mt-4">
-          <!-- All Events Card -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-primary">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-history"></i>
+        
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+          {% set cards = [
+            {'title': 'All Events', 'icon': 'fa-history', 'value': allevents, 'color': 'primary', 'link': '/history', 'subtitle': 'All time'},
+            {'title': 'Total Created', 'icon': 'fa-desktop', 'value': vmcount, 'color': 'success', 'link': '/history', 'subtitle': 'Successful Builds'},
+            {'title': 'Total Running', 'icon': 'fa-running', 'value': vmrunning, 'color': 'warning', 'link': '/history', 'subtitle': 'In Progress Builds'},
+            {'title': 'Total Issues', 'icon': 'fa-exclamation-triangle', 'value': errorcount, 'color': 'danger', 'link': '/history', 'subtitle': 'Failed Builds'}
+          ] %}
+          
+          {% for card in cards %}
+            <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
+              <div class="card shadow-sm h-100 border-0 bg-dark text-white modern-card">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <div class="icon-big bg-{{ card.color }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                      <i class="fas {{ card.icon }}"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6>{{ card.title }}</h6>
+                      <h3><a href="{{ card.link }}" class="stretched-link text-white">{{ card.value }}</a></h3>
+                    </div>
                   </div>
-                  <div class="ms-3">
-                    <h6>All Events</h6>
-                    <h3><a href="/history" class="stretched-link">{{ allevents }}</a></h3>
+                  <div class="mt-3 text-end text-muted">
+                    <i class="fas fa-info-circle"></i> {{ card.subtitle }}
                   </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-calendar"></i> All time
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Total Created Card -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-success">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-desktop"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>Total Created</h6>
-                    <h3><a class="text-success stretched-link" href="/history">{{ vmcount }}</a></h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-calendar"></i> Successful Builds
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Running Card -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-warning">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-running"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>Total Running</h6>
-                    <h3><a class="text-warning stretched-link" href="/history">{{ vmrunning }}</a></h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-calendar"></i> In Progress Builds
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total Issues Card -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-danger">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-spider"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>Total Issues</h6>
-                    <h3><a class="text-danger stretched-link" href="/history">{{ errorcount }}</a></h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-fire-extinguisher"></i> Failed Builds
-                </div>
-              </div>
-            </div>
-          </div>
+          {% endfor %}
         </div>
 
         <!-- Additional Statistics -->
         <div class="row mb-4">
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-info">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-clock"></i>
+          {% set stats = [
+            {'title': 'Average Build Time', 'icon': 'fa-clock', 'value': averageBuildTime, 'color': 'info', 'subtitle': 'Average Time'},
+            {'title': 'System Uptime', 'icon': 'fa-bolt', 'value': systemUptime ~ ' days', 'color': 'secondary', 'subtitle': 'Since Started'},
+            {'title': 'Performance Score', 'icon': 'fa-chart-line', 'value': performanceScore, 'color': 'success' if performanceScore >= 80 else 'warning' if performanceScore >= 50 else 'danger', 'subtitle': 'Performance'},
+            {'title': 'ESXi Server IP', 'icon': 'fa-server', 'value': esxi_ip, 'color': 'light', 'subtitle': 'Host', 'id': 'host-status'}
+          ] %}
+          
+          {% for stat in stats %}
+            <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
+              <div class="card shadow-sm h-100 border-0 bg-dark text-white modern-card">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <div class="icon-big bg-{{ stat.color }} {% if stat.color == 'light' %}text-dark{% else %}text-white{% endif %} rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                      <i class="fas {{ stat.icon }}"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6>{{ stat.title }}</h6>
+                      <h3 {% if stat.id %}id="{{ stat.id }}"{% endif %}>{{ stat.value }}</h3>
+                    </div>
                   </div>
-                  <div class="ms-3">
-                    <h6>Average Build Time</h6>
-                    <h3>{{ averageBuildTime }}</h3>
+                  <div class="mt-3 text-end text-muted">
+                    <i class="fas {{ stat.icon }}"></i> {{ stat.subtitle }}
                   </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-clock"></i> Average Build Time
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-secondary">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-bolt"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>System Uptime</h6>
-                    <h3>{{ systemUptime }} days</h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-bolt"></i> System Uptime
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Performance Score Card with Clean Design -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-light">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  {% set score_color = 'bg-success text-white' if performanceScore >= 80 else 'bg-warning text-white' if performanceScore >= 50 else 'bg-danger text-white' %}
-                  <div class="icon-big rounded-circle d-flex align-items-center justify-content-center {{ score_color }}" style="width: 60px; height: 60px;">
-                    <i class="fas fa-chart-line"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>Performance Score</h6>
-                    <h3 class="text-dark">{{ performanceScore }}</h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-chart-line"></i> Performance
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ESXi Server IP Card -->
-          <div class="col-sm-6 col-md-6 col-lg-3 mb-4">
-            <div class="card shadow-sm h-100 border-light">
-              <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-big bg-light text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                    <i class="fas fa-server"></i>
-                  </div>
-                  <div class="ms-3">
-                    <h6>ESXi Server IP</h6>
-                    <h3 id="host-status">{{ esxi_ip }}</h3>
-                  </div>
-                </div>
-                <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-server"></i> Host
-                </div>
-              </div>
-            </div>
-          </div>
+          {% endfor %}
         </div>
 
         <!-- Quick History -->
         <div class="row mb-4">
           <div class="col-md-12 col-lg-12">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm h-100 bg-dark text-white modern-card">
               <div class="card-body">
                 <h4 class="card-title mb-3">Quick History</h4>
                 <div class="table-responsive">
-                  <table class="table table-hover table-bordered" id="quickHistoryTable">
-                    <thead class="table-light">
+                  <table class="table table-dark table-bordered" id="quickHistoryTable">
+                    <thead class="thead-dark">
                       <tr>
                         <th>State</th>
                         <th>IP Address</th>
@@ -198,16 +96,18 @@
                       {% for row in data %}
                       <tr>
                         <td>
-                          {% if row.status == 'Completed' %}
-                            <span class="badge bg-success text-white"><i class="fas fa-check-circle"></i> Completed</span>
-                          {% elif row.status == 'Running' %}
-                            <span class="badge bg-warning text-white"><i class="fas fa-spinner fa-spin"></i> Running</span>
-                          {% elif row.status == 'Failed' %}
-                            <span class="badge bg-danger text-white"><i class="fas fa-times-circle"></i> Failed</span>
-                          {% endif %}
+                          {% set status_icons = {
+                            'Completed': {'icon': 'fa-check-circle', 'color': 'success', 'text': 'Completed'},
+                            'Running': {'icon': 'fa-spinner fa-spin', 'color': 'warning', 'text': 'Running'},
+                            'Failed': {'icon': 'fa-times-circle', 'color': 'danger', 'text': 'Failed'}
+                          } %}
+                          {% set status = status_icons.get(row.status, {'icon': 'fa-question-circle', 'color': 'secondary', 'text': 'Unknown'}) %}
+                          <span class="badge bg-{{ status.color }} text-white">
+                            <i class="fas {{ status.icon }}"></i> {{ status.text }}
+                          </span>
                         </td>
                         <td>{{ row.ipaddress }}</td>
-                        <td><a href="{{ url_for('home_blueprint.history') }}?search={{ row.hostname }}">{{ row.hostname }}</a></td>
+                        <td><a href="{{ url_for('home_blueprint.history') }}?search={{ row.hostname }}" class="text-white">{{ row.hostname }}</a></td>
                         <td>{{ row.env }}</td>
                       </tr>
                       {% endfor %}
@@ -215,7 +115,7 @@
                   </table>
                 </div>
                 <div class="mt-3 text-end text-muted">
-                  <i class="fas fa-circle"></i> Most Recent 5 Only
+                  <i class="fas fa-info-circle"></i> Showing most recent 5 entries
                 </div>
               </div>
             </div>
@@ -228,4 +128,40 @@
 </div>
 
 {% include 'includes/toastr.html' %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add copy functionality to ESXi Server IP
+    const hostStatus = document.getElementById('host-status');
+    if (hostStatus) {
+      hostStatus.style.cursor = 'pointer';
+      hostStatus.addEventListener('click', function() {
+        navigator.clipboard.writeText(this.textContent.trim())
+          .then(() => {
+            toastr.success('IP address copied to clipboard!');
+          })
+          .catch(err => {
+            console.error('Failed to copy text: ', err);
+            toastr.error('Failed to copy IP address');
+          });
+      });
+    }
+  
+    // Initialize DataTable for Quick History
+    $('#quickHistoryTable').DataTable({
+      "pageLength": 5,
+      "lengthChange": false,
+      "searching": false,
+      "info": false,
+      "order": [[0, "desc"]]
+    });
+  
+    // Add pulse animation to Running status
+    const runningStatuses = document.querySelectorAll('.badge.bg-warning');
+    runningStatuses.forEach(status => {
+      status.classList.add('pulse-animation');
+    });
+  });
+</script>
+
 {% endblock content %}

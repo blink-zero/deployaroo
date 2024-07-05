@@ -9,6 +9,9 @@ class ConfigModel(db.Model):
     esxi_host = db.Column(db.String(100), default='')
     vcenter_username = db.Column(db.String(100), default='')
     _vcenter_password = db.Column("vcenter_password", db.String(255), default='')
+    discord_webhook_url = db.Column(db.String(255))
+    notify_completed = db.Column(db.Boolean, default=False)
+    notify_failed = db.Column(db.Boolean, default=False)
 
     @hybrid_property
     def vcenter_password(self):

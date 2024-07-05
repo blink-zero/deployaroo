@@ -4,6 +4,8 @@ import logging
 import os
 import json
 import shutil
+import ssl
+import requests
 from werkzeug.security import generate_password_hash
 import yaml
 from apps.config import Config
@@ -20,6 +22,9 @@ from flask import flash, send_from_directory
 from werkzeug.utils import secure_filename
 import zipfile
 from apps.utils.logging import log_json
+from pyVim import connect
+from pyVmomi import vim
+from urllib3.exceptions import InsecureRequestWarning
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'zip'}
@@ -46,12 +51,12 @@ def admin_required(func):
 def settings():
     return redirect(url_for('settings_blueprint.settings_general'))
 
-@blueprint.route('/settings/general')
-@login_required
-@admin_required
-def settings_general():
-    log_json('INFO', 'Accessed general settings page')
-    return render_template('home/settings.html', active_tab='general')
+# @blueprint.route('/settings/general')
+# @login_required
+# @admin_required
+# def settings_general():
+#     log_json('INFO', 'Accessed general settings page')
+#     return render_template('home/settings.html', active_tab='general')
 
 @blueprint.route('/settings/vmware')
 @login_required
@@ -424,14 +429,18 @@ def modify_image(image_id):
 @login_required
 @admin_required
 def update_vmware_config():
-    esxi_ip = request.form.get('host_ip')
-    vcenter_server = request.form.get('vcenter_server')
-    vcenter_username = request.form.get('vcenter_username')
-    vcenter_password = request.form.get('vcenter_password')
+    try:
+        esxi_ip = request.form.get('host_ip')
+        vcenter_server = request.form.get('vcenter_server')
+        vcenter_username = request.form.get('vcenter_username')
+        vcenter_password = request.form.get('vcenter_password')
 
-    config = ConfigModel.query.first()
+        config = ConfigModel.query.first()
 
-    if config:
+        if not config:
+            config = ConfigModel()
+            db.session.add(config)
+
         if esxi_ip:
             config.set_esxi_ip(esxi_ip)
             config.set_esxi_host(esxi_ip)
@@ -445,14 +454,14 @@ def update_vmware_config():
         if vcenter_password:
             config.set_vcenter_password(vcenter_password)
             os.environ['VCENTER_PASSWORD'] = vcenter_password
+
         db.session.commit()
         log_json('INFO', 'VMware configuration updated', esxi_ip=esxi_ip, vcenter_server=vcenter_server)
-        flash('VMware configuration updated successfully!', 'success')
-    else:
-        log_json('ERROR', 'VMware configuration update failed')
-        flash('VMware configuration update failed.', 'error')
-
-    return redirect(url_for('settings_blueprint.settings_vmware'))
+        return jsonify({'success': True, 'message': 'VMware configuration updated successfully!'})
+    except Exception as e:
+        db.session.rollback()
+        log_json('ERROR', 'VMware configuration update failed', error=str(e), traceback=traceback.format_exc())
+        return jsonify({'success': False, 'message': f'VMware configuration update failed: {str(e)}'}), 500
 
 @blueprint.route('/settings/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -477,7 +486,7 @@ def edit_user(user_id):
     }
     return jsonify(user_data), 200
 
-@blueprint.route('/delete_user/<int:user_id>', methods=['GET', 'POST'])
+@blueprint.route('/settings/delete_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def delete_user(user_id):
@@ -622,18 +631,15 @@ def reset_password(user_id):
             new_password = request.form.get('new_password')
             confirm_password = request.form.get('confirm_password')
             if new_password != confirm_password:
-                flash('Passwords do not match', 'error')
-                return redirect(url_for('settings_blueprint.settings'))
+                return jsonify({'success': False, 'message': 'Passwords do not match'})
 
         user.set_password(new_password)
         db.session.commit()
         log_json('INFO', f'Password for user {user.username} has been reset', user_id=user.id)
-        flash('Password has been reset', 'success')
+        return jsonify({'success': True, 'message': 'Password has been reset successfully'})
     else:
         log_json('ERROR', 'User not found', user_id=user_id)
-        flash('User not found', 'error')
-
-    return redirect(url_for('settings_blueprint.settings_users'))
+        return jsonify({'success': False, 'message': 'User not found'}), 404
 
 @blueprint.route('/get_playbook/<image_id>')
 @login_required
@@ -852,27 +858,30 @@ def update_default_vm_values():
 @login_required
 @admin_required
 def update_template_passwords():
-    linux_template_password = request.form.get('linux_template_password')
-    windows_template_password = request.form.get('windows_template_password')
+    try:
+        linux_template_password = request.form.get('linux_template_password')
+        windows_template_password = request.form.get('windows_template_password')
 
-    defaultvmsettings = DefaultVmSettingsModel.query.first()
+        defaultvmsettings = DefaultVmSettingsModel.query.first()
 
-    os.environ['LINUX_TEMPLATE_PASSWORD'] = linux_template_password
-    os.environ['WINDOWS_TEMPLATE_PASSWORD'] = windows_template_password
+        if not defaultvmsettings:
+            defaultvmsettings = DefaultVmSettingsModel()
+            db.session.add(defaultvmsettings)
 
-    if defaultvmsettings:
         if linux_template_password:
             defaultvmsettings.set_linux_template_password(linux_template_password)
+            os.environ['LINUX_TEMPLATE_PASSWORD'] = linux_template_password
         if windows_template_password:
             defaultvmsettings.set_windows_template_password(windows_template_password)
+            os.environ['WINDOWS_TEMPLATE_PASSWORD'] = windows_template_password
+
         db.session.commit()
         log_json('INFO', 'Template passwords updated')
-        flash('Passwords updated successfully!', 'success')
-    else:
-        log_json('ERROR', 'Password update failed')
-        flash('Password update failed.', 'error')
-
-    return redirect(url_for('settings_blueprint.settings_default_vm'))
+        return jsonify({'success': True, 'message': 'Passwords updated successfully!'})
+    except Exception as e:
+        db.session.rollback()
+        log_json('ERROR', 'Template passwords update failed', error=str(e))
+        return jsonify({'success': False, 'message': f'Password update failed: {str(e)}'}), 500
 
 @blueprint.route('/get_backup_history', methods=['GET'])
 @login_required
@@ -958,3 +967,95 @@ def delete_domain_item(item_id):
         log_json('ERROR', 'Domain item not found', item_id=item_id)
         flash("Domain item not found", "error")
     return redirect(url_for('home_blueprint.home'))
+
+@blueprint.route('/test_vmware_connection', methods=['POST'])
+@login_required
+@admin_required
+def test_vmware_connection():
+    data = request.json
+    host_ip = data.get('host_ip')
+    vcenter_server = data.get('vcenter_server')
+    vcenter_username = data.get('vcenter_username')
+    vcenter_password = data.get('vcenter_password')
+
+    # Suppress only the single warning from urllib3 needed.
+    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+    try:
+        # Create SSL context
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+        # Attempt to connect to vCenter
+        si = connect.SmartConnect(host=vcenter_server,
+                                  user=vcenter_username,
+                                  pwd=vcenter_password,
+                                  sslContext=context,
+                                  disableSslCertValidation=True)
+
+        # If connection is successful, disconnect
+        connect.Disconnect(si)
+
+        log_json('INFO', 'VMware connection test successful',
+                 vcenter_server=vcenter_server, username=vcenter_username)
+        return jsonify({'success': True, 'message': 'Connection successful'}), 200
+
+    except vim.fault.InvalidLogin:
+        log_json('ERROR', 'VMware connection test failed: Invalid login',
+                 vcenter_server=vcenter_server, username=vcenter_username)
+        return jsonify({'success': False, 'message': 'Invalid login credentials'}), 401
+
+    except ssl.SSLError as e:
+        log_json('ERROR', 'VMware connection test failed: SSL error',
+                 vcenter_server=vcenter_server, username=vcenter_username, error=str(e))
+        return jsonify({'success': False, 'message': f'SSL Error: {str(e)}. Consider using a valid SSL certificate or updating your SSL configuration.'}), 500
+
+    except Exception as e:
+        log_json('ERROR', 'VMware connection test failed',
+                 vcenter_server=vcenter_server, username=vcenter_username, error=str(e))
+        return jsonify({'success': False, 'message': f'Connection failed: {str(e)}'}), 500
+    
+@blueprint.route('/settings/update_discord_webhook', methods=['POST'])
+@login_required
+@admin_required
+def update_discord_webhook():
+    discord_webhook_url = request.form.get('discord_webhook_url')
+    notify_completed = request.form.get('notify_completed') == 'on'
+    notify_failed = request.form.get('notify_failed') == 'on'
+
+    config = ConfigModel.query.first()
+    if not config:
+        config = ConfigModel()
+        db.session.add(config)
+
+    config.discord_webhook_url = discord_webhook_url
+    config.notify_completed = notify_completed
+    config.notify_failed = notify_failed
+
+    try:
+        db.session.commit()
+        log_json('INFO', 'Discord Webhook settings updated', 
+                 webhook_url=discord_webhook_url, 
+                 notify_completed=notify_completed, 
+                 notify_failed=notify_failed)
+        return jsonify({'success': True, 'message': 'Discord Webhook settings updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        log_json('ERROR', 'Failed to update Discord Webhook settings', error=str(e))
+        return jsonify({'success': False, 'message': 'Failed to update Discord Webhook settings'})
+
+@blueprint.route('/settings/general')
+@login_required
+@admin_required
+def settings_general():
+    log_json('INFO', 'Accessed general settings page')
+    config = ConfigModel.query.first()
+    discord_webhook_url = config.discord_webhook_url if config else ''
+    notify_completed = config.notify_completed if config else False
+    notify_failed = config.notify_failed if config else False
+    return render_template('home/settings.html', 
+                           active_tab='general', 
+                           discord_webhook_url=discord_webhook_url,
+                           notify_completed=notify_completed,
+                           notify_failed=notify_failed)

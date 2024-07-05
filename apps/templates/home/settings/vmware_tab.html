@@ -1,92 +1,196 @@
 <div class="tab-pane fade {% if active_tab == 'vmware' %}show active{% endif %}" id="vmware" role="tabpanel" aria-labelledby="vmware-tab">
-    <!-- VMware configuration form -->
-    <form action="{{ url_for('settings_blueprint.update_vmware_config') }}" method="post">
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h4><i class="fa fa-cogs"></i> VMware Configuration (Global)</h4>
+    <div class="card bg-dark text-white shadow-sm mb-4">
+        <div class="card-header bg-secondary">
+            <h4 class="mb-0"><i class="fas fa-server me-2"></i>VMware Configuration (Global)</h4>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('settings_blueprint.update_vmware_config') }}" method="post" id="vmwareConfigForm">
+                <div class="row g-3">
+                    <!-- ESXi Host IP -->
+                    <div class="col-md-6">
+                        <label for="host_ip" class="form-label">ESXi Host IP</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-network-wired"></i></span>
+                            <input type="text" id="host_ip" name="host_ip" class="form-control bg-secondary text-white" placeholder="Enter Host IP" value="{{ config.esxi_ip or '' }}" required>
+                        </div>
+                        <small class="form-text text-muted">Enter the IP address of the ESXi host to deploy machines to.</small>
                     </div>
-                    <div class="card-body">
-                        <!-- ESXi Host IP -->
-                        <div class="mb-3 row align-items-center">
-                            <label for="host_ip" class="col-sm-2 col-form-label">ESXi Host IP</label>
-                            <div class="col-sm-5">
-                                <div class="d-flex align-items-center">
-                                    <input type="text" id="host_ip" name="host_ip" class="form-control" placeholder="Enter Host IP">
-                                    {% if config.esxi_ip %}
-                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
-                                    {% else %}
-                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
-                                    {% endif %}
-                                </div>
-                                <small class="form-text text-muted">
-                                    <em>Current: <strong>{{ config.esxi_ip or "Not Set" }}</strong></em><br>
-                                    Enter the IP address of the ESXi host to deploy machines to.
-                                </small>
-                            </div>
+
+                    <!-- vCenter DNS Name -->
+                    <div class="col-md-6">
+                        <label for="vcenter_server" class="form-label">vCenter DNS Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-server"></i></span>
+                            <input type="text" id="vcenter_server" name="vcenter_server" class="form-control bg-secondary text-white" placeholder="Enter DNS Name" value="{{ config.vcenter_server or '' }}" required>
                         </div>
-                        <!-- vCenter DNS Name -->
-                        <div class="mb-3 row align-items-center">
-                            <label for="vcenter_server" class="col-sm-2 col-form-label">vCenter DNS Name</label>
-                            <div class="col-sm-5">
-                                <div class="d-flex align-items-center">
-                                    <input type="text" id="vcenter_server" name="vcenter_server" class="form-control" placeholder="Enter DNS Name">
-                                    {% if config.vcenter_server %}
-                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
-                                    {% else %}
-                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
-                                    {% endif %}
-                                </div>
-                                <small class="form-text text-muted">
-                                    <em>Current: <strong>{{ config.vcenter_server or "Not Set" }}</strong></em><br>
-                                    Enter the DNS name of the vCenter server.
-                                </small>
-                            </div>
+                        <small class="form-text text-muted">Enter the DNS name of the vCenter server.</small>
+                    </div>
+
+                    <!-- vCenter User -->
+                    <div class="col-md-6">
+                        <label for="vcenter_username" class="form-label">vCenter User</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-user"></i></span>
+                            <input type="text" id="vcenter_username" name="vcenter_username" class="form-control bg-secondary text-white" placeholder="Enter Username" value="{{ config.vcenter_username or '' }}" required>
                         </div>
-                        <!-- vCenter User -->
-                        <div class="mb-3 row align-items-center">
-                            <label for="vcenter_username" class="col-sm-2 col-form-label">vCenter User</label>
-                            <div class="col-sm-5">
-                                <div class="d-flex align-items-center">
-                                    <input type="text" id="vcenter_username" name="vcenter_username" class="form-control" placeholder="Enter Username">
-                                    {% if config.vcenter_username %}
-                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
-                                    {% else %}
-                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
-                                    {% endif %}
-                                </div>
-                                <small class="form-text text-muted">
-                                    <em>Current: <strong>{{ config.vcenter_username or "Not Set" }}</strong></em><br>
-                                    Enter the username for the vCenter user.
-                                </small>
-                            </div>
+                        <small class="form-text text-muted">Enter the username for the vCenter user.</small>
+                    </div>
+
+                    <!-- vCenter User Password -->
+                    <div class="col-md-6">
+                        <label for="vcenter_password" class="form-label">vCenter User Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-lock"></i></span>
+                            <input type="password" id="vcenter_password" name="vcenter_password" class="form-control bg-secondary text-white" placeholder="Enter Password" data-current-password="{{ 'set' if config.vcenter_password else '' }}">
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
-                        <!-- vCenter User Password -->
-                        <div class="mb-3 row align-items-center">
-                            <label for="vcenter_password" class="col-sm-2 col-form-label">vCenter User Password</label>
-                            <div class="col-sm-5">
-                                <div class="d-flex align-items-center">
-                                    <input type="password" id="vcenter_password" name="vcenter_password" class="form-control" placeholder="Enter Password">
-                                    {% if config.vcenter_password %}
-                                        <span class="ms-2 text-success"><i class="fas fa-check-circle"></i></span>
-                                    {% else %}
-                                        <span class="ms-2 text-danger"><i class="fas fa-times-circle"></i></span>
-                                    {% endif %}
-                                </div>
-                                <small class="form-text text-muted">
-                                    <em>Current: {% if config.vcenter_password %}<span class="text-success">A password is set</span>{% else %}<span class="text-danger">A password is not set</span>{% endif %}</em><br>
-                                    Enter the password for the vCenter user.
-                                </small>
-                            </div>
-                        </div>
-                        <div class="text-left">
-                            <button class="btn btn-primary"><i class="fas fa-save"></i> Update Configuration</button>
-                        </div>
+                        <small class="form-text text-muted">Enter the password for the vCenter user.</small>
+                        <div id="passwordStatus" class="mt-2"></div>
                     </div>
                 </div>
-            </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" id="updateConfigBtn">
+                        <i class="fas fa-save me-2"></i>Update Configuration
+                    </button>
+                    <button type="button" class="btn btn-outline-light ms-2" id="testConnection">
+                        <i class="fas fa-plug me-2"></i>Test Connection
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('vmwareConfigForm');
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('vcenter_password');
+    const updateConfigBtn = document.getElementById('updateConfigBtn');
+    const testConnection = document.getElementById('testConnection');
+
+    togglePassword.addEventListener('click', function () {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.querySelector('i').classList.toggle('fa-eye');
+        this.querySelector('i').classList.toggle('fa-eye-slash');
+    });
+
+    function updateIcon(input, isValid) {
+        const icon = input.nextElementSibling.querySelector('i');
+        if (isValid) {
+            icon.className = 'fas fa-check-circle text-success';
+            icon.style.display = 'inline';
+        } else {
+            icon.className = 'fas fa-times-circle text-danger';
+            icon.style.display = 'inline';
+        }
+    }
+
+    function validateInput(input) {
+        updateIcon(input, input.value.trim() !== '');
+    }
+
+    form.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', function() {
+            validateInput(this);
+        });
+    });
+
+    function updatePasswordStatus() {
+        const statusElement = document.getElementById('passwordStatus');
+        const currentPassword = password.getAttribute('data-current-password');
+
+        if (currentPassword) {
+            statusElement.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Password is set</span>';
+        } else {
+            statusElement.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-circle"></i> Password is not set</span>';
+        }
+
+        password.addEventListener('input', function() {
+            if (this.value) {
+                statusElement.innerHTML = '<span class="text-info"><i class="fas fa-info-circle"></i> New password entered (not saved)</span>';
+            } else {
+                updatePasswordStatus();
+            }
+        });
+    }
+
+    updatePasswordStatus();
+
+    form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    updateConfigBtn.disabled = true;
+    updateConfigBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            toastr.success('VMware configuration updated successfully!');
+            password.setAttribute('data-current-password', password.value ? 'set' : '');
+            updatePasswordStatus();
+        } else {
+            toastr.error(data.message || 'Error updating VMware configuration. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toastr.error(`An unexpected error occurred: ${error.message}. Please try again.`);
+    })
+    .finally(() => {
+        updateConfigBtn.disabled = false;
+        updateConfigBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Configuration';
+    });
+});
+
+    testConnection.addEventListener('click', function() {
+        if (form.checkValidity()) {
+            testConnection.disabled = true;
+            testConnection.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+
+            fetch('/test_vmware_connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    host_ip: document.getElementById('host_ip').value,
+                    vcenter_server: document.getElementById('vcenter_server').value,
+                    vcenter_username: document.getElementById('vcenter_username').value,
+                    vcenter_password: document.getElementById('vcenter_password').value,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Connection successful!');
+                } else {
+                    toastr.error(`Connection failed: ${data.message}`);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                toastr.error('An error occurred while testing the connection.');
+            })
+            .finally(() => {
+                testConnection.disabled = false;
+                testConnection.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+            });
+        } else {
+            toastr.error('Please fill in all required fields before testing the connection');
+        }
+    });
+});
+</script>

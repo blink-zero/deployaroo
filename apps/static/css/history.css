@@ -1,3 +1,22 @@
+:root {
+  --bg-dark: #1e1f21;
+  --bg-card: #212529;
+  --text-light: #e4e6eb;
+  --text-muted: #94a3b8;
+  --border-color: #3a3b3d;
+  --accent-color: #1abc9c;
+  --input-bg: #2c3e50;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+}
+
+/* Badge Styles */
 .state-icon .badge {
   display: inline-flex;
   align-items: center;
@@ -5,67 +24,140 @@
 }
 
 .badge.bg-success {
-  background-color: #28a745 !important;
+  background-color: var(--success-color) !important;
+  color: var(--text-light) !important;
 }
 
 .badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: black !important;
+  background-color: var(--warning-color) !important;
+  color: var(--bg-dark) !important;
 }
 
 .badge.bg-danger {
-  background-color: #dc3545 !important;
+  background-color: var(--danger-color) !important;
+  color: var(--text-light) !important;
 }
 
+/* Form Controls */
 .form-control {
-  border-radius: 0.25rem;
+  border-radius: 8px;
   box-shadow: none;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-light);
 }
 
 .form-control:focus {
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+  border-color: var(--accent-color);
 }
 
+/* Button Styles */
 .btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
-  border-color: #004085;
+  background-color: #16a085;
+  border-color: #16a085;
 }
 
 .btn-primary:focus, .btn-primary.focus {
-  box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+  box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.5);
 }
 
+/* Card Styles */
 .card {
-  border-radius: 0.5rem;
+  border-radius: 15px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .card-header {
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .card-body {
   padding: 1.5rem;
 }
 
+/* Table Styles */
 .table {
   margin-bottom: 1.5rem;
+  color: var(--text-light);
 }
 
 .table th a {
   text-decoration: none;
+  color: var(--accent-color);
 }
 
 .table th, .table td {
   vertical-align: middle;
+  border-color: var(--border-color);
 }
 
+.table thead th {
+  background-color: var(--bg-card);
+}
+
+.table tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Button Link Styles */
 .btn-link.badge-view-log {
   padding: 0;
   font-size: 0.875rem;
+  color: var(--accent-color);
+}
+
+.btn-link.badge-view-log:hover {
+  color: #16a085;
+  text-decoration: underline;
+}
+
+/* Placeholder color */
+::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:-ms-input-placeholder {
+  color: var(--text-muted);
+}
+
+::-ms-input-placeholder {
+  color: var(--text-muted);
+}
+
+/* Pagination Styles */
+.pagination .page-item .page-link {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-light);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--text-light);
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-light);
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-muted);
 }

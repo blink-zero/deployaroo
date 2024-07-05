@@ -3,29 +3,26 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center flex-grow-1">
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
   <div class="auth-content">
-    <div class="card shadow-lg p-4" style="border-radius: 15px;">
+    <div class="card shadow-lg p-4 bg-dark text-light">
       <div class="card-body text-center">
         <div class="mb-4">
-          <img class="brand mb-3" src="{{ url_for('static', filename='logo/deployaroo_text_lightgrey.png') }}" alt="Brand Logo" class="img-fluid" style="max-width: 200px;">
+          <img class="brand mb-3" src="{{ url_for('static', filename='logo/deployaroo_text_white.png') }}" alt="Brand Logo" class="img-fluid">
           <br>
           <span class="text-muted" style="font-size: 10px;">
-            <b>A <a href="https://github.com/blink-zero" class="text-decoration-none">blink-zero</a> project</b>
+            <b>A <a href="https://github.com/blink-zero" class="text-decoration-none text-muted">blink-zero</a> project</b>
           </span>
         </div>
         <form method="POST">
           <div class="mb-3">
-            <input type="text" class="form-control" name="user_id" placeholder="Username" aria-label="Username" required>
+            <input type="text" class="form-control bg-dark text-light" name="user_id" placeholder="Username" aria-label="Username" required>
           </div>
           <div class="mb-3 position-relative">
-            <input type="password" class="form-control" name="password" placeholder="Password" aria-label="Password" required>
+            <input type="password" class="form-control bg-dark text-light" name="password" placeholder="Password" aria-label="Password" required>
             <button class="btn btn-outline-secondary position-absolute end-0 top-50 translate-middle-y me-2" type="button" id="togglePassword" aria-label="Show password"><i class="fas fa-eye"></i></button>
           </div>
-          <!-- <div class="mb-3 text-end">
-            <a href="#" class="text-decoration-none">Forgot your password?</a>
-          </div> -->
-          <button class="btn btn-primary w-100 shadow-2 mb-4" type="submit" id="loginButton" style="border-radius: 5px;">
+          <button class="btn btn-primary w-100 shadow-2 mb-4" type="submit" id="loginButton">
             <span id="buttonText">Login</span>
             <span id="buttonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
           </button>
@@ -36,7 +33,9 @@
           {% endif %}
         </form>
         <div class="mt-4">
-          <span class="text-muted" style="font-size: 12px;">Application Version: 1.0.1beta</span>
+          <span class="text-muted" style="font-size: 12px;">Application Version: 1.0.0</span>
+          <br>
+          <span class="text-muted" style="font-size: 10px;">&copy; 2024 Deployaroo. All rights reserved.</span>
         </div>
       </div>
     </div>
@@ -72,4 +71,42 @@
     });
   });
 </script>
+
+<style>
+  .auth-content {
+    width: 100%;
+    max-width: 400px;
+    padding: 15px;
+  }
+
+  .card {
+    border-radius: 15px;
+    border: 1px solid #3a3b3d;
+  }
+
+  .form-control {
+    border-color: #3a3b3d;
+  }
+
+  #togglePassword {
+    color: #e4e6eb;
+    border-color: #3a3b3d;
+  }
+
+  #loginButton {
+    border-radius: 5px;
+    background-color: #1abc9c;
+    border-color: #1abc9c;
+  }
+
+  .brand {
+    max-width: 200px;
+  }
+
+  @media (max-width: 576px) {
+    .auth-content {
+      width: 90%;
+    }
+  }
+</style>
 {% endblock %}

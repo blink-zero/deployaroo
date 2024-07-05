@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Deployaroo | {% block title %}{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='logo/deployaroo_white.ico') }}">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="{{ url_for('static', filename='vendor/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='vendor/toastr/toastr.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/master.css') }}" rel="stylesheet">
+
+  <!-- Prism.js for syntax highlighting -->
+  <link href="{{ url_for('static', filename='vendor/prism-1.27.0/css/prism-tomorrow.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='vendor/prism-1.27.0/js/prism.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/prism-1.27.0/js/prism-bash.min.js') }}"></script>
+
+  <!-- Custom JS for Ansible syntax highlighting -->
+  <script src="{{ url_for('static', filename='js/prism-ansible.js') }}"></script>
+
+  <!-- Hightlightjs for vm images -->
+  <link href="{{ url_for('static', filename='vendor/highlightjs11.5.1/default.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='vendor/highlightjs11.5.1/highlight.min.js') }}"></script>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-light text-dark">
+  {% block content %}{% endblock content %}
+
+  {% include 'includes/scripts.html' %}
+
+  <!-- jQuery -->
+  <script src="{{ url_for('static', filename='vendor/jquery3/jquery-3.4.1.min.js') }}"></script>
+
+  <!-- FontAwesome -->
+  <script src="{{ url_for('static', filename='vendor/fontawesome5/js/solid.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/fontawesome5/js/fontawesome.min.js') }}"></script>
+
+  <!-- Toastr -->
+  <script src="{{ url_for('static', filename='vendor/toastr/toastr.min.js') }}"></script>
+
+  <!-- Custom Script -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="{{ url_for('static', filename='vendor/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
+
+</body>
+</html>
