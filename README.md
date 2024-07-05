@@ -1,6 +1,18 @@
-# Welcome to Deployaroo
+<p align="center">
+  <img src="apps/static/logo/deployaroo_text_lightgrey.png" alt="Deployaroo Logo" width="400px">
+</p>
 
-<img src="apps/static/logo/deployaroo_text_lightgrey.png" alt="Deployaroo Logo" width="400px" style="display: block; margin-left: auto; margin-right: auto;">
+<p align="center">
+  <a href="https://github.com/blink-zero/deployaroo/releases">
+    <img src="https://img.shields.io/github/v/release/blink-zero/deployaroo" alt="Release">
+  </a>
+  <a href="https://github.com/blink-zero/deployaroo/issues">
+    <img src="https://img.shields.io/github/issues/blink-zero/deployaroo" alt="Issues">
+  </a>
+  <a href="https://github.com/blink-zero/deployaroo/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/blink-zero/deployaroo" alt="License">
+  </a>
+</p>
 
 **Deployaroo** is a sleek and intuitive web interface for deploying VMware vSphere virtual machine templates using Ansible.
 
