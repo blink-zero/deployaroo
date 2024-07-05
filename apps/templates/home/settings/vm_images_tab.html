@@ -253,10 +253,31 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="editPlaybook('{{ image.id }}')">Edit Playbook</button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Playbook Modal -->
+            <div class="modal fade" id="editPlaybookModal{{ image.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Playbook for {{ image.image_human_name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="editPlaybookContent{{ image.id }}" class="form-control" rows="20"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="savePlaybook('{{ image.id }}')">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% endfor %}
         </div>
     </div>
@@ -462,6 +483,45 @@
         .catch(error => {
             console.error("Error deleting image:", error);
             toastr.error("An error occurred while deleting image.");
+        });
+    }
+
+    function editPlaybook(imageId) {
+        var viewModal = document.getElementById(`viewPlaybookModal${imageId}`);
+        var editModal = document.getElementById(`editPlaybookModal${imageId}`);
+        var content = document.getElementById(`playbookContent${imageId}`).textContent;
+        document.getElementById(`editPlaybookContent${imageId}`).value = content;
+        
+        bootstrap.Modal.getInstance(viewModal).hide();
+        new bootstrap.Modal(editModal).show();
+    }
+
+    function savePlaybook(imageId) {
+        var content = document.getElementById(`editPlaybookContent${imageId}`).value;
+        
+        fetch('/save_playbook', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image_id: imageId,
+                content: content
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                toastr.success('Playbook saved successfully');
+                document.getElementById(`playbookContent${imageId}`).textContent = content;
+                bootstrap.Modal.getInstance(document.getElementById(`editPlaybookModal${imageId}`)).hide();
+            } else {
+                toastr.error('Failed to save playbook: ' + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            toastr.error('An error occurred while saving the playbook');
         });
     }
     
