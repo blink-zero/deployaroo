@@ -24,6 +24,7 @@ import zipfile
 from apps.utils.logging import log_json
 from pyVim import connect
 from pyVmomi import vim
+from sqlalchemy.exc import IntegrityError
 from urllib3.exceptions import InsecureRequestWarning
 
 def allowed_file(filename):
@@ -468,23 +469,39 @@ def update_vmware_config():
 @admin_required
 def edit_user(user_id):
     user = User.query.get(user_id)
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('settings_blueprint.settings_users'))
+
     if request.method == 'POST':
-        user.username = request.form['username']
+        new_username = request.form['username']
         new_password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-        if new_password and confirm_password and new_password == confirm_password:
-            user.password = generate_password_hash(new_password)
 
-        db.session.commit()
-        log_json('INFO', f'User {user.username} has been updated', user_id=user.id)
-        flash(f'{user.username} has been updated.', 'success')
-        return redirect(url_for('settings_blueprint.settings_users'))
+        try:
+            user.username = new_username
+            if new_password and confirm_password and new_password == confirm_password:
+                user.password = generate_password_hash(new_password)
+
+            db.session.commit()
+            log_json('INFO', f'User {user.username} has been updated', user_id=user.id)
+            flash(f'{user.username} has been updated.', 'success')
+            return redirect(url_for('settings_blueprint.settings_users'))
+
+        except IntegrityError:
+            db.session.rollback()
+            log_json('ERROR', f'Failed to update user {user.username} due to duplicate username', user_id=user.id)
+            flash(f'Failed to update user. The username "{new_username}" is already taken.', 'error')
+        except Exception as e:
+            db.session.rollback()
+            log_json('ERROR', f'Failed to update user {user.username}', error=str(e))
+            flash(f'Failed to update user. Error: {str(e)}', 'error')
 
     user_data = {
         'id': user.id,
         'username': user.username,
     }
-    return jsonify(user_data), 200
+    return redirect(url_for('settings_blueprint.settings_users'))
 
 @blueprint.route('/settings/delete_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -558,11 +575,34 @@ def create_group():
 @admin_required
 def edit_group(id):
     group = Group.query.get(id)
-    group.name = request.form['groupname']
-    group.description = request.form['groupdescription']
-    db.session.commit()
-    log_json('INFO', f'Group {group.name} updated', group_id=group.id)
-    flash(f'{group.name} Group has been updated.', 'success')
+    if not group:
+        flash('Group not found.', 'error')
+        return redirect(url_for('settings_blueprint.settings_users'))
+
+    new_name = request.form['groupname']
+    new_description = request.form['groupdescription']
+
+    try:
+        if new_name != group.name:
+            # Check if the new group name already exists
+            existing_group = Group.query.filter(Group.name == new_name, Group.id != id).first()
+            if existing_group:
+                raise IntegrityError("Group name already exists", None, None)
+        
+        group.name = new_name
+        group.description = new_description
+        db.session.commit()
+        log_json('INFO', f'Group {group.name} updated', group_id=group.id)
+        flash(f'{group.name} Group has been updated.', 'success')
+    except IntegrityError:
+        db.session.rollback()
+        log_json('ERROR', f'Failed to update group {new_name} due to duplicate name', group_id=id)
+        flash(f'Failed to update group. The name "{new_name}" is already taken.', 'error')
+    except Exception as e:
+        db.session.rollback()
+        log_json('ERROR', f'Failed to update group {new_name}', error=str(e))
+        flash(f'Failed to update group. Error: {str(e)}', 'error')
+
     return redirect(url_for('settings_blueprint.settings_users'))
 
 @blueprint.route('/settings/delete_group/<int:id>', methods=['POST'])
@@ -678,6 +718,31 @@ def get_playbook_content():
         content = file.read()
     log_json('INFO', 'Playbook content retrieved', playbook_path=playbook_path)
     return jsonify({'content': content})
+
+@blueprint.route('/save_playbook', methods=['POST'])
+@login_required
+@admin_required
+def save_playbook():
+    data = request.json
+    image_id = data.get('image_id')
+    content = data.get('content')
+    
+    image = VmImageModel.query.get(image_id)
+    if not image:
+        return jsonify({'success': False, 'message': 'Image not found'}), 404
+
+    playbook_path = os.path.join('apps/plugins', 
+                                 'ansible-deploy-vm-domain' if image.network_type == 'domain' else 'ansible-deploy-vm', 
+                                 'tasks', 
+                                 image.image_folder_name, 
+                                 'main.yml')
+
+    try:
+        with open(playbook_path, 'w') as file:
+            file.write(content)
+        return jsonify({'success': True, 'message': 'Playbook saved successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @blueprint.route('/save_playbook_content', methods=['POST'])
 @login_required
