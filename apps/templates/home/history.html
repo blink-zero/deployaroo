@@ -161,6 +161,25 @@
   </div>
 </div>
 
+<!-- Modal for restart confirmation -->
+<div class="modal fade" id="confirmRestartModal" tabindex="-1" aria-labelledby="confirmRestartModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRestartModalLabel">Confirm VM Restart</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to restart this VM?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRestartBtn">Restart VM</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% include 'includes/toastr.html' %}
 
 <!-- Include static JavaScript files -->
@@ -249,6 +268,28 @@ function restartVM(vmId) {
       toastr.error('Failed to initiate VM restart.');
     });
 }
+
+function restartVM(vmId) {
+  const modal = new bootstrap.Modal(document.getElementById('confirmRestartModal'));
+  modal.show();
+
+  document.getElementById('confirmRestartBtn').onclick = function() {
+    modal.hide();
+    fetch(`/restart_vm/${vmId}`, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          toastr.success('VM restart initiated successfully.');
+        } else {
+          toastr.error('Failed to restart VM.');
+        }
+      })
+      .catch(() => {
+        toastr.error('Failed to initiate VM restart.');
+      });
+  };
+}
+
 </script>
 
 {% endblock content %}
