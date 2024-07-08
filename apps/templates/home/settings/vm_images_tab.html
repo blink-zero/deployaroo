@@ -31,16 +31,15 @@
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     }
     #vm-images .form-control {
-        background-color: rgba(255, 255, 255, 0.1);
-        border: none;
-        border-radius: 25px;
+        border-radius: 8px;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-card);
         color: var(--text-light);
-        padding: 0.75rem 1.25rem;
-        transition: all 0.3s ease;
     }
     #vm-images .form-control:focus {
-        background-color: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.5);
+        box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+        border-color: var(--accent-color);
     }
     #vm-images .modal-content {
         background-color: var(--bg-card);
