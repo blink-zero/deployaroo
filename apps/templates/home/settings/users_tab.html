@@ -50,14 +50,16 @@
   }
   #users .form-control,
   #users .form-select {
-    background-color: var(--input-bg);
+    border-radius: 8px;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
     color: var(--text-light);
-    border-color: var(--border-color);
-    border-radius: 50px;
   }
   #users .form-control:focus,
   #users .form-select:focus {
-    box-shadow: 0 0 0 0.2rem rgba(var(--accent-color-rgb), 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    border-color: var(--accent-color);
   }
 </style>
 
