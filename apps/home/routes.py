@@ -227,6 +227,8 @@ def history():
 
     return render_template('home/history.html', data=data, pagination=pagination, search_query=search_query, sort_column=sort_column, sort_order=sort_order)
 
+
+
 @blueprint.route('/restart_vm/<int:vm_id>', methods=['POST'])
 @login_required
 @admin_required
@@ -264,19 +266,51 @@ def restart_vm(vm_id):
 @admin_required
 def vm_details(vm_id):
     try:
-        # Fetch the VM details from your database
         vm = History.query.get(vm_id)
         if vm:
+
+            # ref: https://docs.vmware.com/en/VMware-HCX/4.9/hcx-user-guide/GUID-D4FFCBD6-9FEC-44E5-9E26-1BD0A2A81389.html
+
+            windows_groups = [
+                'win31Guest', 'win95Guest', 'win98Guest', 'winntGuest', 'win2000ProGuest',
+                'win2000ServGuest', 'win2000AdvServGuest', 'winXPProGuest', 'winXPPro64Guest',
+                'winNetEnterpriseGuest', 'winNetDatacenterGuest', 'winNetStandardGuest',
+                'winNetWebGuest', 'winNetBusinessGuest', 'winNetEnterprise64Guest',
+                'winNetDatacenter64Guest', 'winNetStandard64Guest', 'winVistaGuest',
+                'winVista64Guest', 'winLonghornGuest', 'winLonghorn64Guest', 'windows7Guest',
+                'windows7_64Guest', 'windows7Server64Guest', 'windows8Guest', 'windows8_64Guest',
+                'windows8Server64Guest', 'windows9Guest', 'windows9_64Guest',
+                'windows9Server64Guest', 'windows2019srv_64Guest'
+            ]
+
+            is_windows = vm.group in windows_groups
+
             details = {
                 'hostname': vm.hostname,
                 'ipaddress': vm.ipaddress,
                 'imagetype': vm.imagetype,
+                'group': vm.group,
+                'designation': vm.designation,
                 'env': vm.env,
                 'cpu': vm.cpu,
                 'ram': vm.ram,
                 'status': vm.status,
                 'starttime': vm.starttime,
                 'endtime': vm.endtime,
+                'vm_state': vm.vm_state,
+                'disk_size': vm.windows_disk_size if is_windows else vm.linux_disk_size,
+                'vm_network': vm.vm_network,
+                'subnet_mask': vm.subnet_mask,
+                'gateway': vm.gateway,
+                'dns_1': vm.dns_1,
+                'dns_2': vm.dns_2,
+                'vm_folder': vm.vm_folder,
+                'datacenter': vm.datacenter,
+                'disk_datastore': vm.disk_datastore,
+                'domain_name': vm.domain_name if hasattr(vm, 'domain_name') else None,
+                'domain_admin_user': vm.domain_admin_user if hasattr(vm, 'domain_admin_user') else None,
+                'centos_ou_membership': vm.centos_ou_membership if hasattr(vm, 'centos_ou_membership') else None,
+                'ubuntu_ou_membership': vm.ubuntu_ou_membership if hasattr(vm, 'ubuntu_ou_membership') else None,
             }
             log_json('INFO', f'VM details retrieved for VM ID: {vm_id}')
             return jsonify(details)
@@ -320,13 +354,27 @@ def create_machine(environment):
     log_json('INFO', 'Create machine request received', environment=environment, environment_name=environment_name)
 
     item_id = request.form.get('item_id')
+
+    # Explicitly check for domain and non-domain items
+    domain_item = None
+    non_domain_item = None
+    if environment == 'other_domain':
+        domain_item = DomainModel.query.get(item_id)
+        if domain_item:
+            environment_name = domain_item.name
+            playbook_location = 'ansible-deploy-vm-domain'
+    elif environment == 'other':
+        non_domain_item = NonDomainModel.query.get(item_id)
+        if non_domain_item:
+            environment_name = non_domain_item.name
+
     item_environment_name, item_playbook_location = handle_item_id(environment, item_id)
     
     environment_name = item_environment_name or environment_name
     playbook_location = item_playbook_location or playbook_location
 
-    domain_item = DomainModel.query.get(item_id)
-    non_domain_item = NonDomainModel.query.get(item_id)
+    # domain_item = DomainModel.query.get(item_id)
+    # non_domain_item = NonDomainModel.query.get(item_id)
     config = ConfigModel.query.first()
     default_settings = DefaultVmSettingsModel.query.first()
 
@@ -389,6 +437,60 @@ def create_machine(environment):
         pwd = os.getcwd()
         ansible_log_path = os.path.join(f'{pwd}/logs/build_logs', log_file_name)
 
+        item = domain_item or non_domain_item  # Use whichever is not None
+        if item:
+            designation = item.designation
+        else:
+            designation = ''
+
+        # Common environment variables
+        common_env_vars = {
+            'esxi_host': os.environ.get('ESXI_HOST'),
+            'vcenter_server': os.environ.get('VCENTER_SERVER'),
+            'vcenter_username': os.environ.get('VCENTER_USERNAME'),
+            'vm_state': os.environ.get('VM_STATE'),
+            'linux_disk_size': os.environ.get('LINUX_DISK_SIZE'),
+            'windows_disk_size': os.environ.get('WINDOWS_DISK_SIZE'),
+            'vm_hw_scsi': os.environ.get('VM_HW_SCSI'),
+            'vm_type': os.environ.get('VM_TYPE'),
+            'timezone': os.environ.get('TIMEZONE'),
+            'vm_net_type': os.environ.get('VM_NET_TYPE'),
+            'ntp_servers': os.environ.get('NTP_SERVERS'),
+            'ad_upstream_dns1': os.environ.get('AD_UPSTREAM_DNS1'),
+            'ad_upstream_dns2': os.environ.get('AD_UPSTREAM_DNS2'),
+            'linux_template_username': os.environ.get('LINUX_TEMPLATE_USERNAME'),
+            'linux_template_password': os.environ.get('LINUX_TEMPLATE_PASSWORD'),
+            'windows_template_username': os.environ.get('WINDOWS_TEMPLATE_USERNAME'),
+            'windows_template_password': os.environ.get('WINDOWS_TEMPLATE_PASSWORD'),
+            'designation': designation,
+            'datacenter': os.environ.get(f'{designation}_DATACENTER'),
+            'disk_datastore': os.environ.get(f'{designation}_DISK_DATASTORE'),
+            'vm_network': os.environ.get(f'{designation}_VM_NETWORK'),
+            'subnet_mask': os.environ.get(f'{designation}_SUBNET_MASK'),
+            'gateway': os.environ.get(f'{designation}_GATEWAY'),
+            'dns_1': os.environ.get(f'{designation}_DNS_1'),
+            'dns_2': os.environ.get(f'{designation}_DNS_2'),
+            'vm_folder': os.environ.get(f'{designation}_VM_FOLDER'),
+            'validate_cert': os.environ.get(f'{designation}_VALIDATE_CERT'),
+            'network_address': os.environ.get(f'{designation}_NETWORK_ADDRESS'),
+        }
+
+        # Domain-specific environment variables
+        domain_env_vars = {
+            'temp_ad_domain_name': os.environ.get('TEMP_AD_DOMAIN_NAME'),
+            'domain_name': os.environ.get(f'{designation}_DOMAIN_NAME'),
+            'domain_admin_user': os.environ.get(f'{designation}_DOMAIN_ADMIN_USER'),
+            'domain_admin_password': os.environ.get(f'{designation}_DOMAIN_ADMIN_PASSWORD'),
+            'centos_ou_membership': os.environ.get(f'{designation}_CENTOS_OU_MEMBERSHIP'),
+            'ubuntu_ou_membership': os.environ.get(f'{designation}_UBUNTU_OU_MEMBERSHIP')
+        }
+
+        # Combine common and domain-specific vars only if it's a domain machine
+        if domain_item:
+            env_vars = {**common_env_vars, **domain_env_vars}
+        else:
+            env_vars = common_env_vars
+
         new_history = History(
             starttime=time.strftime('%A %B, %d %Y %H:%M:%S'),
             endtime="In Progress",
@@ -396,12 +498,15 @@ def create_machine(environment):
             ipaddress=ipaddress,
             hostname=hostname,
             imagetype=imagetype,
+            machinetype=machinetype,
+            group = group,
             cpu=cpu,
             ram=ram,
             env=environment_name,
-            ansible_log_path=ansible_log_path
+            ansible_log_path=ansible_log_path,
+            **env_vars
         )
-        
+
         db.session.add(new_history)
         db.session.commit()
 
@@ -449,7 +554,6 @@ def create_machine(environment):
                 send_discord_notification(f"Build started for VM: {hostname}")
 
     return redirect('/home')
-
 
 
 def set_environment_variables_from_item(item):
@@ -872,3 +976,4 @@ def export_history_pdf():
         download_name='deployaroo_history_export.pdf',
         mimetype='application/pdf'
     )
+
