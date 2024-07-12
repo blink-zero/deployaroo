@@ -12,6 +12,7 @@ class History(db.Model):
     imagetype = db.Column(db.String(50), unique=False, nullable=False)
     machinetype = db.Column(db.String(50), unique=False, nullable=False)
     group = db.Column(db.String(50), unique=False, nullable=False)
+    humanname = db.Column(db.String(50), unique=False, nullable=False)
     cpu = db.Column(db.String(50), unique=False, nullable=False)
     ram = db.Column(db.String(50), unique=False, nullable=False)
     env = db.Column(db.String(50), unique=False, nullable=False)
@@ -82,7 +83,7 @@ class History(db.Model):
     def domain_admin_password(self, value):
         self._domain_admin_password = encrypt_password(value)
 
-    def __init__(self, starttime, endtime, status, ipaddress, hostname, imagetype, machinetype, group, cpu, ram, env, ansible_log_path=None, **kwargs):
+    def __init__(self, starttime, endtime, status, ipaddress, hostname, imagetype, machinetype, group, humanname, cpu, ram, env, ansible_log_path=None, **kwargs):
         self.starttime = starttime
         self.endtime = endtime
         self.status = status
@@ -91,6 +92,7 @@ class History(db.Model):
         self.imagetype = imagetype
         self.machinetype = machinetype
         self.group = group
+        self.humanname = humanname
         self.cpu = cpu
         self.ram = ram
         self.env = env
