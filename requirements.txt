@@ -14,3 +14,4 @@ flask-paginate==2024.4.12
 retrying==1.3.4
 pywinrm==0.4.3
 reportlab==4.2.2
+paramiko==3.4.0
