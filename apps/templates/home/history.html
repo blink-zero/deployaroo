@@ -192,7 +192,7 @@
 
 <!-- Modal for Post-Build Action -->
 <div class="modal fade" id="postBuildActionModal" tabindex="-1" aria-labelledby="postBuildActionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content bg-dark text-white">
       <div class="modal-header">
         <h5 class="modal-title" id="postBuildActionModalLabel">Post-Build Action</h5>
@@ -202,10 +202,11 @@
         <form id="postBuildActionForm">
           <div id="actionInputs"></div>
         </form>
+        <div id="actionStatus" class="mt-3" style="max-height: 200px; overflow-y: auto;"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="confirmPostBuildActionBtn">Execute</button>
+        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
+        <button type="button" class="btn btn-primary" id="confirmPostBuildActionBtn"><i class="fas fa-play"></i> Execute</button>
       </div>
     </div>
   </div>
@@ -222,19 +223,57 @@
 const actionConfigs = {
   'increase_disk': {
     title: 'Increase Disk Size',
+    description: `
+      <p>This action allows you to increase the disk size of your virtual machine.</p>
+      <ul>
+        <li>The new size must be larger than the current disk size.</li>
+        <li>This operation extends the disk at the hypervisor level.</li>
+        <li>This operation also extends the partition on the OS after extending the disk.</li>
+        <li>For Windows VMs, it will extend the C: drive.</li>
+        <li>For Linux VMs, it will extend the root partition (/) or LVM if used.</li>
+        <li>Always ensure you have a recent backup before modifying disk sizes.</li>
+      </ul>
+      <p><strong>Note:</strong> Disk size cannot be decreased once increased.</p>
+      <p>You can check the logs for the latest status updates.</p>
+    `,
     inputs: [
       { name: 'size', type: 'number', label: 'New Size (GB)', min: 1, step: 1 }
     ]
   },
   'change_password': {
     title: 'Change User Password',
+    description: `
+      <p>This action allows you to change the password for the template user account on the virtual machine.</p>
+      <ul>
+        <li>The username shown is the template username for this VM and cannot be changed.</li>
+        <li>After changing, the new password will take effect immediately.</li>
+        <li>It's recommended that you log in manually to the machine and change other passwords.</li>
+        <li>Remember to update any services or scheduled tasks that might be using the old password.</li>
+        <li>You can run this as many times as you want.</li>
+      </ul>
+      <p><strong>Note:</strong> Change other user passwords as soon as possible. i.e. root</p>
+      <p>You can check the logs for the latest status updates.</p>
+    `,
     inputs: [
-      { name: 'username', type: 'text', label: 'Username' },
+      { name: 'username', type: 'text', label: 'Username', readonly: true },
       { name: 'password', type: 'password', label: 'New Password' }
     ]
   },
   'update_os': {
     title: 'Update OS',
+    description: `
+      <p>This action initiates an operating system update on the virtual machine.</p>
+      <ul>
+        <li>For Windows VMs, this will run Windows Update to install the latest patches.</li>
+        <li>For Linux VMs, this will update all packages to their latest versions.</li>
+        <li>The update process may take several minutes to complete.</li>
+        <li>Your VM may require a restart after the update process.</li>
+        <li>Ensure all important work is saved before proceeding.</li>
+        <li>It's recommended to perform updates during maintenance windows.</li>
+      </ul>
+      <p><strong>Note:</strong> It is safe to close this modal. The process will continue in the background.</p>
+      <p>You can check the logs for the latest status updates.</p>    
+      `,
     inputs: [] // No additional inputs needed
   }
 };
@@ -308,6 +347,32 @@ function viewDetails(vmId) {
           </div>
         `;
       }
+
+      function calculateTimeTaken(startTime, endTime) {
+        if (!startTime || !endTime) return 'N/A';
+        
+        const parseDate = (dateString) => {
+          const months = {
+            'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+            'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+          };
+          
+          const [, dayName, month, day, year, time] = dateString.match(/(\w+) (\w+), (\d+) (\d+) (\d+:\d+:\d+)/);
+          return new Date(year, months[month], day, ...time.split(':'));
+        };
+        
+        const start = parseDate(startTime);
+        const end = parseDate(endTime);
+        const diff = end - start;
+        
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      const timeTaken = calculateTimeTaken(data.starttime, data.endtime);
       
       let domainInfo = '';
       if (machineType === 'Domain Machine') {
@@ -330,12 +395,13 @@ function viewDetails(vmId) {
             <div class="col-md-6 mb-4">
               <div class="info-card server-info">
                 <h5><i class="fas fa-server"></i> VM Information</h5>
+                ${createInfoItem('Image', data.humanname)}
+                ${createInfoItem('Machine Type', machineType)}
                 ${createInfoItem('Hostname', data.hostname)}
                 ${createInfoItem('IP Address', data.ipaddress)}
                 ${createInfoItem('Template', data.imagetype)}
                 ${createInfoItem('Environment', data.env)}
                 ${createInfoItem('VM OS Type', `${data.group}`)}
-                ${createInfoItem('Machine Type', machineType)}
               </div>
             </div>
             <div class="col-md-6 mb-4">
@@ -366,14 +432,15 @@ function viewDetails(vmId) {
                 ${createInfoItem('Disk Datastore', data.disk_datastore)}
               </div>
             </div>
-            ${domainInfo}
             <div class="col-md-6 mb-4">
               <div class="info-card time-info">
                 <h5><i class="fas fa-clock"></i> Time Information</h5>
                 ${createInfoItem('Start Time', data.starttime)}
                 ${createInfoItem('End Time', data.endtime || 'N/A')}
+                ${createInfoItem('Time Taken', timeTaken)}
               </div>
             </div>
+            ${domainInfo}
           </div>
         </div>
       `;
@@ -423,24 +490,110 @@ function restartVM(vmId) {
   };
 }
 
+// Helper function to determine if the OS is Windows
+function isWindowsOS(guestId) {
+  const windowsGuestIds = [
+    'win31Guest', 'win95Guest', 'win98Guest', 'winntGuest', 'win2000ProGuest',
+    'win2000ServGuest', 'win2000AdvServGuest', 'winXPProGuest', 'winXPPro64Guest',
+    'winNetEnterpriseGuest', 'winNetDatacenterGuest', 'winNetStandardGuest',
+    'winNetWebGuest', 'winNetBusinessGuest', 'winNetEnterprise64Guest',
+    'winNetDatacenter64Guest', 'winNetStandard64Guest', 'winVistaGuest',
+    'winVista64Guest', 'winLonghornGuest', 'winLonghorn64Guest', 'windows7Guest',
+    'windows7_64Guest', 'windows7Server64Guest', 'windows8Guest', 'windows8_64Guest',
+    'windows8Server64Guest', 'windows9Guest', 'windows9_64Guest',
+    'windows9Server64Guest', 'windows2019srv_64Guest'
+  ];
+  return windowsGuestIds.includes(guestId);
+}
+
 function showPostBuildActionModal(vmId, action) {
   const modal = new bootstrap.Modal(document.getElementById('postBuildActionModal'));
   const config = actionConfigs[action];
   
   document.getElementById('postBuildActionModalLabel').textContent = config.title;
   
-  const inputsContainer = document.getElementById('actionInputs');
-  inputsContainer.innerHTML = '';
+  const modalBody = document.querySelector('#postBuildActionModal .modal-body');
+  modalBody.innerHTML = `
+    <div class="action-description mb-4">
+      ${config.description}
+    </div>
+    <form id="postBuildActionForm">
+      <div id="actionInputs"></div>
+    </form>
+    <div id="actionStatus" class="mt-3" style="max-height: 200px; overflow-y: auto;"></div>
+  `;
   
-  config.inputs.forEach(input => {
-    const div = document.createElement('div');
-    div.className = 'mb-3';
-    div.innerHTML = `
-      <label for="${input.name}" class="form-label">${input.label}</label>
-      <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" ${input.min ? `min="${input.min}"` : ''} ${input.step ? `step="${input.step}"` : ''} required>
-    `;
-    inputsContainer.appendChild(div);
-  });
+  const inputsContainer = document.getElementById('actionInputs');
+  
+  if (action === 'increase_disk') {
+    // Fetch VM details
+    fetch(`/vm_details/${vmId}`)
+      .then(response => response.json())
+      .then(data => {
+        const currentSize = parseInt(data.disk_size);
+        config.inputs.forEach(input => {
+          const div = document.createElement('div');
+          div.className = 'mb-3';
+          div.innerHTML = `
+            <label for="${input.name}" class="form-label">${input.label}</label>
+            <div class="input-group">
+              <span class="input-group-text">Current: ${currentSize} GB</span>
+              <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" min="${currentSize + 1}" step="${input.step}" required>
+              <span class="input-group-text">GB</span>
+            </div>
+          `;
+          inputsContainer.appendChild(div);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching VM details:', error);
+        toastr.error('Failed to fetch VM details');
+      });
+  } else if (action === 'change_password') {
+    // Fetch VM details to get the correct username
+    fetch(`/vm_details/${vmId}`)
+      .then(response => response.json())
+      .then(data => {
+        let username = isWindowsOS(data.group) ? data.windows_template_username : data.linux_template_username;
+        
+        if (!username) {
+          console.error('Username not found in VM details');
+          username = 'Username not available';
+        }
+
+        config.inputs.forEach(input => {
+          const div = document.createElement('div');
+          div.className = 'mb-3';
+          if (input.name === 'username') {
+            div.innerHTML = `
+              <label for="${input.name}" class="form-label">${input.label}</label>
+              <input type="text" class="form-control" id="${input.name}" name="${input.name}" value="${username}" readonly>
+            `;
+          } else {
+            div.innerHTML = `
+              <label for="${input.name}" class="form-label">${input.label}</label>
+              <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" required>
+            `;
+          }
+          inputsContainer.appendChild(div);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching VM details:', error);
+        toastr.error('Failed to fetch VM details');
+      });
+  } else {
+    // For other actions, render inputs as before
+    config.inputs.forEach(input => {
+      const div = document.createElement('div');
+      div.className = 'mb-3';
+      div.innerHTML = `
+        <label for="${input.name}" class="form-label">${input.label}</label>
+        <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" ${input.min ? `min="${input.min}"` : ''} ${input.step ? `step="${input.step}"` : ''} required>
+      `;
+      inputsContainer.appendChild(div);
+    });
+  }
   
   document.getElementById('confirmPostBuildActionBtn').onclick = function() {
     const formData = new FormData(document.getElementById('postBuildActionForm'));
@@ -448,11 +601,15 @@ function showPostBuildActionModal(vmId, action) {
   };
   
   modal.show();
-}
+}  
 
 function executePostBuildAction(vmId, action, inputData) {
   const modal = bootstrap.Modal.getInstance(document.getElementById('postBuildActionModal'));
-  modal.hide();
+  const statusDiv = document.getElementById('actionStatus');
+  const confirmButton = document.getElementById('confirmPostBuildActionBtn');
+  
+  confirmButton.disabled = true;
+  // statusDiv.innerHTML = '<div class="alert alert-info">Initiating action...</div>';
 
   fetch(`/execute_post_build_action/${vmId}/${action}`, {
     method: 'POST',
@@ -461,18 +618,101 @@ function executePostBuildAction(vmId, action, inputData) {
     },
     body: JSON.stringify(inputData),
   })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        toastr.success(`${actionConfigs[action].title} initiated successfully.`);
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      if (action === 'update_os' || action === 'change_password' || action === 'increase_disk') {
+        handleStreamingResponse(response, statusDiv, confirmButton, modal, action);
       } else {
-        toastr.error(`Failed to initiate ${actionConfigs[action].title}.`);
+        return response.json();
       }
     })
-    .catch(() => {
-      toastr.error(`Failed to initiate ${actionConfigs[action].title}.`);
+    .then(data => {
+      if (data && data.success) {
+        if (action === 'increase_disk') {
+          toastr.success(`Disk size increased to ${data.new_size} GB successfully.`);
+        } else {
+          toastr.success(`${actionConfigs[action].title} completed successfully.`);
+        }
+        confirmButton.disabled = false;
+        confirmButton.textContent = 'Close';
+        confirmButton.onclick = () => {
+          modal.hide();
+          location.reload();
+        };
+      } else if (data) {
+        statusDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+        confirmButton.disabled = false;
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      statusDiv.innerHTML = `<div class="alert alert-danger">Failed to complete ${actionConfigs[action].title}.</div>`;
+      toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+      confirmButton.disabled = false;
     });
 }
+
+function handleStreamingResponse(response, statusDiv, confirmButton, modal, action) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let toastShown = false;
+
+  function readStream() {
+    reader.read().then(({ done, value }) => {
+      if (done) {
+        console.log('Stream complete');
+        setCompleteState();
+        return;
+      }
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      lines.forEach(line => {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          statusDiv.innerHTML += `<div><em>${data}</em></div>`;
+          statusDiv.scrollTop = statusDiv.scrollHeight;
+        } else if (line.startsWith('event: updateComplete')) {
+          setCompleteState();
+        }
+      });
+
+      readStream();
+    }).catch(error => {
+      console.error('Error in stream:', error);
+      statusDiv.innerHTML += '<div class="alert alert-danger">Error in update stream. Please check logs.</div>';
+      setCompleteState(true);
+    });
+  }
+
+  function setCompleteState(isError = false) {
+    confirmButton.disabled = false;
+    confirmButton.textContent = 'Close';
+    confirmButton.onclick = () => {
+      modal.hide();
+      location.reload();
+    };
+    if (!toastShown) {
+      if (isError) {
+        toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+      } else {
+        toastr.success(`${actionConfigs[action].title} completed successfully.`);
+      }
+      toastShown = true;
+    }
+  }
+
+  readStream();
+}
+
+// ensure the page refreshes when the modal is dismissed by clicking outside or pressing ESC
+document.getElementById('postBuildActionModal').addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+});
 
 </script>
 
