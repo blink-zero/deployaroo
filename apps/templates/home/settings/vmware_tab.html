@@ -1,6 +1,6 @@
 <div class="tab-pane fade {% if active_tab == 'vmware' %}show active{% endif %}" id="vmware" role="tabpanel" aria-labelledby="vmware-tab">
     <div class="card bg-dark text-white shadow-sm mb-4">
-        <div class="card-header bg-secondary">
+        <div class="card-header bg-dark">
             <h4 class="mb-0"><i class="fas fa-server me-2"></i>VMware Configuration (Global)</h4>
         </div>
         <div class="card-body">
@@ -10,8 +10,8 @@
                     <div class="col-md-6">
                         <label for="host_ip" class="form-label">ESXi Host IP</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-network-wired"></i></span>
-                            <input type="text" id="host_ip" name="host_ip" class="form-control bg-secondary text-white" placeholder="Enter Host IP" value="{{ config.esxi_ip or '' }}" required>
+                            <span class="input-group-text bg-dark text-white"><i class="fas fa-network-wired"></i></span>
+                            <input type="text" id="host_ip" name="host_ip" class="form-control bg-dark text-white" placeholder="Enter Host IP" value="{{ config.esxi_ip or '' }}" required>
                         </div>
                         <small class="form-text text-muted">Enter the IP address of the ESXi host to deploy machines to.</small>
                     </div>
@@ -20,8 +20,8 @@
                     <div class="col-md-6">
                         <label for="vcenter_server" class="form-label">vCenter DNS Name</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-server"></i></span>
-                            <input type="text" id="vcenter_server" name="vcenter_server" class="form-control bg-secondary text-white" placeholder="Enter DNS Name" value="{{ config.vcenter_server or '' }}" required>
+                            <span class="input-group-text bg-dark text-white"><i class="fas fa-server"></i></span>
+                            <input type="text" id="vcenter_server" name="vcenter_server" class="form-control bg-dark text-white" placeholder="Enter DNS Name" value="{{ config.vcenter_server or '' }}" required>
                         </div>
                         <small class="form-text text-muted">Enter the DNS name of the vCenter server.</small>
                     </div>
@@ -30,8 +30,8 @@
                     <div class="col-md-6">
                         <label for="vcenter_username" class="form-label">vCenter User</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-user"></i></span>
-                            <input type="text" id="vcenter_username" name="vcenter_username" class="form-control bg-secondary text-white" placeholder="Enter Username" value="{{ config.vcenter_username or '' }}" required>
+                            <span class="input-group-text bg-dark text-white"><i class="fas fa-user"></i></span>
+                            <input type="text" id="vcenter_username" name="vcenter_username" class="form-control bg-dark text-white" placeholder="Enter Username" value="{{ config.vcenter_username or '' }}" required>
                         </div>
                         <small class="form-text text-muted">Enter the username for the vCenter user.</small>
                     </div>
@@ -40,8 +40,8 @@
                     <div class="col-md-6">
                         <label for="vcenter_password" class="form-label">vCenter User Password</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-secondary text-white"><i class="fas fa-lock"></i></span>
-                            <input type="password" id="vcenter_password" name="vcenter_password" class="form-control bg-secondary text-white" placeholder="Enter Password" data-current-password="{{ 'set' if config.vcenter_password else '' }}">
+                            <span class="input-group-text bg-dark text-white"><i class="fas fa-lock"></i></span>
+                            <input type="password" id="vcenter_password" name="vcenter_password" class="form-control bg-dark text-white" placeholder="Enter Password" data-current-password="{{ 'set' if config.vcenter_password else '' }}">
                             <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                 <i class="fas fa-eye"></i>
                             </button>
