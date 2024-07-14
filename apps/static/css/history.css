@@ -312,3 +312,17 @@ body {
   padding: 5px 10px;
   border-radius: 20px;
 }
+
+/* Widen the ansible log modal */
+
+.custom-wide-modal {
+  max-width: 90% !important; 
+  width: 90%;
+}
+
+@media (min-width: 992px) {
+  .custom-wide-modal {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
