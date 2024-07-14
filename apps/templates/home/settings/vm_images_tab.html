@@ -103,6 +103,42 @@
     #vm-images .image-card {
         animation: fadeIn 0.5s ease-out;
     }
+    /* increase height on playbook view modal */
+    .custom-tall-modal {
+        max-height: 85vh;
+        height: 85vh;
+    }
+
+    .custom-tall-modal .modal-dialog {
+        height: 100%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-tall-modal .modal-content {
+        max-height: 90vh;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .custom-tall-modal .modal-body-code {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        flex-direction: column;
+    }
+
+    .custom-tall-modal pre {
+        height: 100%;
+        margin: 0;
+    }
+
+    .custom-tall-modal code {
+        height: 100%;
+        display: block;
+        overflow-y: auto;
+    }
 </style>
 
 <div class="tab-pane fade show active" id="vm-images" role="tabpanel" aria-labelledby="vm-images-tab">
@@ -241,13 +277,13 @@
 
             <!-- View Playbook Modal -->
             <div class="modal fade" id="viewPlaybookModal{{ image.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-dialog modal-xl modal-dialog-centered custom-tall-modal">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Playbook for {{ image.image_human_name }} - Network Type: {{ image.network_type }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body-code">
                             <pre><code id="playbookContent{{ image.id }}" class="yaml"></code></pre>
                         </div>
                         <div class="modal-footer">
@@ -260,14 +296,14 @@
 
             <!-- Edit Playbook Modal -->
             <div class="modal fade" id="editPlaybookModal{{ image.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-dialog modal-xl modal-dialog-centered custom-tall-modal">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Edit Playbook for {{ image.image_human_name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            <textarea id="editPlaybookContent{{ image.id }}" class="form-control" rows="20"></textarea>
+                        <div class="modal-body-code">
+                            <textarea id="editPlaybookContent{{ image.id }}" class="form-control" rows="40"></textarea>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
