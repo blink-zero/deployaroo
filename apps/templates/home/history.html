@@ -143,7 +143,7 @@
 
 <!-- Modal for displaying logs -->
 <div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable custom-wide-modal">
     <div class="modal-content bg-dark text-white">
       <div class="modal-header">
         <h5 class="modal-title" id="logModalLabel">Ansible Log</h5>
@@ -526,7 +526,6 @@ function showPostBuildActionModal(vmId, action) {
   const inputsContainer = document.getElementById('actionInputs');
   
   if (action === 'increase_disk') {
-    // Fetch VM details
     fetch(`/vm_details/${vmId}`)
       .then(response => response.json())
       .then(data => {
@@ -550,7 +549,6 @@ function showPostBuildActionModal(vmId, action) {
         toastr.error('Failed to fetch VM details');
       });
   } else if (action === 'change_password') {
-    // Fetch VM details to get the correct username
     fetch(`/vm_details/${vmId}`)
       .then(response => response.json())
       .then(data => {
@@ -583,7 +581,6 @@ function showPostBuildActionModal(vmId, action) {
         toastr.error('Failed to fetch VM details');
       });
   } else {
-    // For other actions, render inputs as before
     config.inputs.forEach(input => {
       const div = document.createElement('div');
       div.className = 'mb-3';
