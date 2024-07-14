@@ -1,7 +1,7 @@
 <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
     <!-- Change Password Section -->
     <div class="card bg-dark text-white shadow-sm mb-4">
-        <div class="card-header bg-secondary d-flex justify-content-between align-items-center">
+        <div class="card-header bg-dark d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><i class="fas fa-user-lock me-2"></i>Change Password</h4>
         </div>
         <div class="card-body">
@@ -9,8 +9,8 @@
                 <div class="mb-4">
                     <label for="old_password" class="form-label">Current Password</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-secondary text-white"><i class="fas fa-lock"></i></span>
-                        <input type="password" id="old_password" name="old_password" class="form-control bg-secondary text-white" placeholder="Enter Current Password" required>
+                        <span class="input-group-text bg-dark text-white"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="old_password" name="old_password" class="form-control bg-dark text-white" placeholder="Enter Current Password" required>
                         <button class="btn btn-outline-secondary" type="button" id="toggleOldPassword">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -20,8 +20,8 @@
                 <div class="mb-4">
                     <label for="new_password" class="form-label">New Password</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-secondary text-white"><i class="fas fa-key"></i></span>
-                        <input type="password" id="new_password" name="new_password" class="form-control bg-secondary text-white" placeholder="Enter New Password" required>
+                        <span class="input-group-text bg-dark text-white"><i class="fas fa-key"></i></span>
+                        <input type="password" id="new_password" name="new_password" class="form-control bg-dark text-white" placeholder="Enter New Password" required>
                         <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -31,8 +31,8 @@
                 <div class="mb-4">
                     <label for="confirm_password" class="form-label">Confirm New Password</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-secondary text-white"><i class="fas fa-check-double"></i></span>
-                        <input type="password" id="confirm_password" name="confirm_password" class="form-control bg-secondary text-white" placeholder="Confirm New Password" required>
+                        <span class="input-group-text bg-dark text-white"><i class="fas fa-check-double"></i></span>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control bg-dark text-white" placeholder="Confirm New Password" required>
                         <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -59,14 +59,14 @@
 
     <!-- Discord Webhook Notification Preferences Section -->
     <div class="card bg-dark text-white shadow-sm">
-        <div class="card-header bg-secondary d-flex justify-content-between align-items-center">
+        <div class="card-header bg-dark d-flex justify-content-between align-items-center">
             <h4 class="mb-0"><i class="fab fa-discord me-2"></i>Discord Webhook Notifications</h4>
         </div>
         <div class="card-body">
             <form id="discordWebhookForm" action="{{ url_for('settings_blueprint.update_discord_webhook') }}" method="post">
                 <div class="mb-3">
                     <label for="discord_webhook_url" class="form-label">Discord Webhook URL</label>
-                    <input type="url" class="form-control bg-secondary text-white" id="discord_webhook_url" name="discord_webhook_url" placeholder="Enter Discord Webhook URL" value="{{ discord_webhook_url }}">
+                    <input type="url" class="form-control bg-dark text-white" id="discord_webhook_url" name="discord_webhook_url" placeholder="Enter Discord Webhook URL" value="{{ discord_webhook_url }}">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Notification Preferences</label>
