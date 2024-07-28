@@ -18,9 +18,9 @@
         <div class="row mb-4">
           {% set cards = [
             {'title': 'All Events', 'icon': 'fa-history', 'value': allevents, 'color': 'primary', 'link': '/history', 'subtitle': 'All time'},
-            {'title': 'Total Created', 'icon': 'fa-desktop', 'value': vmcount, 'color': 'success', 'link': '/history', 'subtitle': 'Successful Builds'},
-            {'title': 'Total Running', 'icon': 'fa-running', 'value': vmrunning, 'color': 'warning', 'link': '/history', 'subtitle': 'In Progress Builds'},
-            {'title': 'Total Issues', 'icon': 'fa-exclamation-triangle', 'value': errorcount, 'color': 'danger', 'link': '/history', 'subtitle': 'Failed Builds'}
+            {'title': 'Total Created', 'icon': 'fa-desktop', 'value': vmcount, 'color': 'success', 'link': '/history?search=Completed&sort=id&order=desc', 'subtitle': 'Successful Builds'},
+            {'title': 'Total Running', 'icon': 'fa-running', 'value': vmrunning, 'color': 'warning', 'link': '/history?search=Running&sort=id&order=desc', 'subtitle': 'In Progress Builds'},
+            {'title': 'Total Issues', 'icon': 'fa-exclamation-triangle', 'value': errorcount, 'color': 'danger', 'link': '/history?search=Failed&sort=id&order=desc', 'subtitle': 'Failed Builds'}
           ] %}
           
           {% for card in cards %}
