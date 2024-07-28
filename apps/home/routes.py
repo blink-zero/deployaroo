@@ -188,7 +188,8 @@ def history():
             History.hostname.ilike(f'%{search_query}%') | 
             History.ipaddress.ilike(f'%{search_query}%') | 
             History.imagetype.ilike(f'%{search_query}%') | 
-            History.env.ilike(f'%{search_query}%')
+            History.env.ilike(f'%{search_query}%') |
+            History.status.ilike(f'%{search_query}%')
         )
 
     if sort_column == 'time_taken':
