@@ -269,7 +269,7 @@ def upload_zip():
             'gather_facts': False,
             'collections': ['community.vmware'],
             'pre_tasks': [{'include_vars': 'vars/other.yml'}],
-            'tasks': [{'import_tasks': f'tasks/{extracted_base_folder}/main.yml'}],
+            'tasks': [{'import_tasks': f'tasks/{item}/main.yml'}],
             'serial': 1
         }
         
