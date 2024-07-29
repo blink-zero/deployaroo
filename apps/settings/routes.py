@@ -508,15 +508,16 @@ def edit_user(user_id):
 @admin_required
 def delete_user(user_id):
     if user_id == 1:
-        message = 'Cannot delete this user.'
+        flash('Cannot delete this user.', 'error')
         log_json('WARNING', 'Attempted to delete super admin user', user_id=user_id)
-        return render_template('home/message.html', message=message)
+        return redirect(url_for('settings_blueprint.settings_users'))
 
     user = User.query.get(user_id)
     if not user:
-        message = 'User not found'
+        flash('User not found', 'error')
         log_json('ERROR', 'User not found', user_id=user_id)
-        return render_template('home/message.html', message=message)
+        return redirect(url_for('settings_blueprint.settings_users'))
+    
     db.session.delete(user)
     db.session.commit()
     log_json('INFO', f'User {user.username} has been deleted', user_id=user.id)
