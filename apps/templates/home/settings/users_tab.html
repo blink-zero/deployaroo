@@ -1,444 +1,761 @@
+<style>
+  #users .card {
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  #users .card-header {
+    background-color: var(--bg-secondary);
+    color: var(--text-light);
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+  }
+  #users .card-body {
+    background-color: var(--bg-card);
+    color: var(--text-light);
+    padding: 1.5rem;
+  }
+  /* #users .btn {
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+  } */
+  #users .btn:hover {
+    /* transform: translateY(-2px); */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  #users .table {
+    color: var(--text-light);
+  }
+  #users .table thead th {
+    border-top: none;
+    border-bottom: 2px solid var(--border-color);
+  }
+  #users .table td,
+  #users .table th {
+    border-color: var(--border-color);
+    vertical-align: middle;
+  }
+  #users .modal-content {
+    background-color: var(--bg-card);
+    color: var(--text-light);
+    border: none;
+    border-radius: 15px;
+  }
+  #users .modal-header,
+  #users .modal-footer {
+    border-color: var(--border-color);
+  }
+  #users .form-control,
+  #users .form-select {
+    border-radius: 8px;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-light);
+  }
+  #users .form-control:focus,
+  #users .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    border-color: var(--accent-color);
+  }
+</style>
+
 <div class="tab-pane fade {% if active_tab == 'users' %}show active{% endif %}" id="users" role="tabpanel" aria-labelledby="users-tab">
-    <!-- User management section -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h4><i class="fas fa-user-cog"></i> User Management</h4>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="mb-0"><i class="fas fa-user-cog me-2"></i>User Management</h4>
+    </div>
+    <div class="card-body">
+      <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <i class="fas fa-user-plus me-2"></i>Create New User
+      </button>
+      <div class="modal fade" id="createUserModal" tabindex="-1" role="dialog" aria-labelledby="createUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="createUserModalLabel">Create New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('settings_blueprint.create_user') }}" method="post">
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" id="username" name="username" class="form-control" placeholder="Enter Username" required />
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password</label>
+                  <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter Password" required />
+                    <button type="button" id="generatePasswordBtn" class="btn btn-outline-secondary">Generate</button>
+                  </div>
+                  <div id="generatedPasswordContainer" class="mt-2 d-none">
+                    <input type="text" id="generatedPassword" class="form-control" readonly />
+                    <button type="button" id="copyPasswordBtn" class="btn btn-secondary mt-2">Copy</button>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Create User</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="card-body">
-            <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
-                <i class="fas fa-user-plus"></i> Create New User
-            </button>
-            <!-- User Creation Modal -->
-            <div class="modal fade" id="createUserModal" tabindex="-1" role="dialog" aria-labelledby="createUserModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="createUserModalLabel">Create New User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form action="{{ url_for('settings_blueprint.create_user') }}" method="post">
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="username">Username</label>
-                                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter Username" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password">Password</label>
-                                    <div class="input-group">
-                                        <input type="password" id="password" name="password" class="form-control" placeholder="Enter Password" required>
-                                        <button type="button" id="generatePasswordBtn" class="btn btn-outline-secondary">Generate</button>
-                                    </div>
-                                    <div id="generatedPasswordContainer" class="mt-2 d-none">
-                                        <input type="text" id="generatedPassword" class="form-control" readonly>
-                                        <button type="button" id="copyPasswordBtn" class="btn btn-secondary mt-2">Copy</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Create User</button>
-                            </div>
-                        </form>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Username</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td>{{ user.username }}</td>
+              <td class="text-end">
+                <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+                  <i class="fas fa-edit me-1"></i>Edit
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
+                  <i class="fas fa-key me-1"></i>Reset Password
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                  <i class="fas fa-trash me-1"></i>Delete
+                </button>
+              </td>
+            </tr>
+            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">Are you sure you want to delete this user?</div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('settings_blueprint.delete_user', user_id=user.id) }}" class="btn btn-danger">Delete</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('settings_blueprint.edit_user', user_id=user.id) }}" method="post">
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required />
+                      </div>
                     </div>
-                </div>
-            </div>
-            <!-- User List Table -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <b><i class="fa fa-list"></i> Modify or Delete Users</b>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Username</th>
-                                <th scope="col" class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                                <tr>
-                                    <th scope="row">{{ loop.index }}</th>
-                                    <td>{{ user.username }}</td>
-                                    <td class="text-end">
-                                        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button type="button" class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
-                                            <i class="fas fa-key"></i> Reset Password
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Delete Confirmation Modal -->
-                                <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Are you sure you want to delete this user?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ url_for('settings_blueprint.delete_user', user_id=user.id) }}" class="btn btn-danger">Delete</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Edit User Modal -->
-                                <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ url_for('settings_blueprint.edit_user', user_id=user.id) }}" method="post">
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label for="username">Username</label>
-                                                        <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-success">Save changes</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Reset Password Modal -->
-                                <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ url_for('settings_blueprint.reset_password', user_id=user.id) }}" method="post">
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label for="new_password_{{ user.id }}">New Password</label>
-                                                        <div class="input-group">
-                                                            <input type="password" id="new_password_{{ user.id }}" name="new_password" class="form-control" placeholder="Enter new password">
-                                                            <button type="button" class="btn btn-outline-secondary generatePasswordBtn" data-user-id="{{ user.id }}">Generate</button>
-                                                        </div>
-                                                        <div id="generatedPasswordContainer_{{ user.id }}" class="mt-2 d-none">
-                                                            <input type="text" id="generatedPassword_{{ user.id }}" class="form-control" readonly>
-                                                            <button type="button" class="btn btn-secondary mt-2 copyPasswordBtn" data-user-id="{{ user.id }}">Copy</button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="confirm_password_{{ user.id }}">Confirm New Password</label>
-                                                        <input type="password" id="confirm_password_{{ user.id }}" name="confirm_password" class="form-control" placeholder="Confirm new password">
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-warning">Reset Password</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Group Management -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h4><i class="fas fa-users-cog"></i> Group Management</h4>
-        </div>
-        <div class="card-body">
-            <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createGroupModal">
-                <i class="fas fa-users"></i> Create a Group
-            </button>
-            <!-- Group Creation Modal -->
-            <div class="modal fade" id="createGroupModal" tabindex="-1" role="dialog" aria-labelledby="createGroupModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="createGroupModalLabel">Create a Group</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form action="{{ url_for('settings_blueprint.create_group') }}" method="post">
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label for="groupname">Group Name</label>
-                                    <input type="text" id="groupname" name="groupname" class="form-control" placeholder="Enter Group Name" required />
-                                </div>
-                                <div class="form-group">
-                                    <label for="groupdescription">Group Description (Optional)</label>
-                                    <input type="text" id="groupdescription" name="groupdescription" class="form-control" placeholder="Enter Group Description" />
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-success">Create Group</button>
-                            </div>
-                        </form>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-success">Save changes</button>
                     </div>
+                  </form>
                 </div>
+              </div>
             </div>
-            <!-- Group List Table -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <b><i class="fa fa-list"></i> Modify or Delete Groups</b>
+            <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('settings_blueprint.reset_password', user_id=user.id) }}" method="post" class="reset-password-form">
+                    <input type="hidden" name="user_id" value="{{ user.id }}" />
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="new_password_{{ user.id }}" class="form-label">New Password</label>
+                        <div class="input-group">
+                          <input type="password" id="new_password_{{ user.id }}" name="new_password" class="form-control" placeholder="Enter new password" required />
+                          <button type="button" class="btn btn-outline-secondary generatePasswordBtn" data-user-id="{{ user.id }}">Generate</button>
+                          <button type="button" class="btn btn-outline-secondary togglePasswordBtn" data-user-id="{{ user.id }}"><i class="fas fa-eye"></i></button>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="confirm_password_{{ user.id }}" class="form-label">Confirm New Password</label>
+                        <div class="input-group">
+                          <input type="password" id="confirm_password_{{ user.id }}" name="confirm_password" class="form-control" placeholder="Confirm new password" required />
+                          <button type="button" class="btn btn-outline-secondary togglePasswordBtn" data-user-id="{{ user.id }}"><i class="fas fa-eye"></i></button>
+                        </div>
+                      </div>
+                      <div id="generatedPasswordContainer_{{ user.id }}" class="mt-2 d-none">
+                        <div class="input-group">
+                          <input type="text" id="generatedPassword_{{ user.id }}" class="form-control" readonly />
+                          <button type="button" class="btn btn-secondary copyPasswordBtn" data-user-id="{{ user.id }}">Copy</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-warning">Reset Password</button>
+                    </div>
+                  </form>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Group Name</th>
-                                <th scope="col">Group Description</th>
-                                <th scope="col" class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for group in groups %}
-                                <tr>
-                                    <th scope="row">{{ loop.index }}</th>
-                                    <td>{{ group.name }}</td>
-                                    <td>{{ group.description }}</td>
-                                    <td class="text-end">
-                                        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editGroupModal{{ group.id }}">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteGroupModal{{ group.id }}">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Delete Confirmation Modal -->
-                                <div class="modal fade" id="deleteGroupModal{{ group.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Are you sure you want to delete this group?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{{ url_for('settings_blueprint.delete_group', id=group.id) }}" method="post">
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Edit Group Modal -->
-                                <div class="modal fade" id="editGroupModal{{ group.id }}" tabindex="-1" role="dialog" aria-labelledby="editGroupModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editGroupModalLabel">Edit Group</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ url_for('settings_blueprint.edit_group', id=group.id) }}" method="post">
-                                                <div class="modal-body">
-                                                    <div class="form-group">
-                                                        <label for="groupname">Group Name</label>
-                                                        <input type="text" id="groupname" name="groupname" class="form-control" value="{{ group.name }}" required />
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="groupdescription">Group Description</label>
-                                                        <input type="text" id="groupdescription" name="groupdescription" class="form-control" value="{{ group.description }}" />
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-success">Save changes</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+              </div>
             </div>
-        </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <!-- User-Group Association -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h4><i class="fas fa-user-plus"></i> User-Group Association</h4>
-        </div>
-        <div class="card-body">
-            <!-- User-Group Association List Table -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <b><i class="fa fa-list"></i> Add User to Group/s</b>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">Username</th>
-                                <th scope="col">Group/s</th>
-                                <th scope="col" class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>
-                                        {% for group in user.groups %} {{ group.name }} {%- if not loop.last %}, {% endif -%} {% endfor %}
-                                    </td>
-                                    <td class="text-end">
-                                        <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editModal{{ user.id }}">
-                                            <i class="fas fa-plus"></i> Add User to Group
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#removeFromGroupModal{{ user.id }}">
-                                            <i class="fas fa-minus"></i> Remove User from Group
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Add User to Group Modal -->
-                                <div class="modal fade" id="editModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editModalLabel">Add User to Group</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ url_for('settings_blueprint.associate_user_group') }}" method="post">
-                                                <div class="modal-body">
-                                                    <div class="form-group">
-                                                        <label for="user_name">User</label>
-                                                        <input type="text" id="user_name" class="form-control" value="{{ user.username }}" readonly />
-                                                        <input type="hidden" id="user_id" name="user_id" value="{{ user.id }}" />
-                                                        <label for="group_id">Group</label>
-                                                        <select id="group_id" name="group_id" class="form-select" required>
-                                                            {% for group in groups %}
-                                                                <option value="{{ group.id }}" {% if group in user.groups %}selected{% endif %}>{{ group.name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-success">Save changes</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Remove User from Group Modal -->
-                                <div class="modal fade" id="removeFromGroupModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="removeFromGroupModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="removeFromGroupModalLabel">Confirm Remove from Group</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="{{ url_for('settings_blueprint.remove_user_from_group') }}" method="post">
-                                                <div class="modal-body">
-                                                    <p>Are you sure you want to remove this user from the group?</p>
-                                                    <input type="hidden" id="user_id" name="user_id" value="{{ user.id }}" />
-                                                    <label for="group_id">Group</label>
-                                                    <select id="group_id" name="group_id" class="form-select" required>
-                                                        {% for group in user.groups %}
-                                                            <option value="{{ group.id }}">{{ group.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-danger">Remove</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  </div>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="mb-0"><i class="fas fa-users-cog me-2"></i>Group Management</h4>
     </div>
+    <div class="card-body">
+      <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+        <i class="fas fa-users me-2"></i>Create a Group
+      </button>
+      <div class="modal fade" id="createGroupModal" tabindex="-1" role="dialog" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="createGroupModalLabel">Create a Group</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('settings_blueprint.create_group') }}" method="post">
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="groupname" class="form-label">Group Name</label>
+                  <input type="text" id="groupname" name="groupname" class="form-control" placeholder="Enter Group Name" required />
+                </div>
+                <div class="mb-3">
+                  <label for="groupdescription" class="form-label">Group Description (Optional)</label>
+                  <input type="text" id="groupdescription" name="groupdescription" class="form-control" placeholder="Enter Group Description" />
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-success">Create Group</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Group Name</th>
+              <th scope="col">Group Description</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for group in groups %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td>{{ group.name }}</td>
+              <td>{{ group.description }}</td>
+              <td class="text-end">
+                <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editGroupModal{{ group.id }}">
+                  <i class="fas fa-edit me-1"></i>Edit
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteGroupModal{{ group.id }}">
+                  <i class="fas fa-trash me-1"></i>Delete
+                </button>
+              </td>
+            </tr>
+            <div class="modal fade" id="deleteGroupModal{{ group.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">Are you sure you want to delete this group?</div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('settings_blueprint.delete_group', id=group.id) }}" method="post">
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal fade" id="editGroupModal{{ group.id }}" tabindex="-1" role="dialog" aria-labelledby="editGroupModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editGroupModalLabel">Edit Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('settings_blueprint.edit_group', id=group.id) }}" method="post">
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="groupname" class="form-label">Group Name</label>
+                        <input type="text" id="groupname" name="groupname" class="form-control" value="{{ group.name }}" required />
+                      </div>
+                      <div class="mb-3">
+                        <label for="groupdescription" class="form-label">Group Description</label>
+                        <input type="text" id="groupdescription" name="groupdescription" class="form-control" value="{{ group.description }}" />
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-success">Save changes</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- User-Group Association -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>User-Group Association</h4>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Username</th>
+              <th scope="col">Group/s</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>{% for group in user.groups %}{{ group.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+              <td class="text-end">
+                <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editModal{{ user.id }}">
+                  <i class="fas fa-plus me-1"></i>Add to Group
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#removeFromGroupModal{{ user.id }}">
+                  <i class="fas fa-minus me-1"></i>Remove from Group
+                </button>
+              </td>
+            </tr>
+            <div class="modal fade" id="editModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Add User to Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('settings_blueprint.associate_user_group') }}" method="post">
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="user_name" class="form-label">User</label>
+                        <input type="text" id="user_name" class="form-control" value="{{ user.username }}" readonly />
+                        <input type="hidden" id="user_id" name="user_id" value="{{ user.id }}" />
+                      </div>
+                      <div class="mb-3">
+                        <label for="group_id" class="form-label">Group</label>
+                        <select id="group_id" name="group_id" class="form-select" required>
+                          {% for group in groups %}
+                          <option value="{{ group.id }}" {% if group in user.groups %}selected{% endif %}>{{ group.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-success">Save changes</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="modal fade" id="removeFromGroupModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="removeFromGroupModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="removeFromGroupModalLabel">Confirm Remove from Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{{ url_for('settings_blueprint.remove_user_from_group') }}" method="post">
+                    <div class="modal-body">
+                      <p>Are you sure you want to remove this user from the group?</p>
+                      <input type="hidden" id="user_id" name="user_id" value="{{ user.id }}" />
+                      <div class="mb-3">
+                        <label for="group_id" class="form-label">Group</label>
+                        <select id="group_id" name="group_id" class="form-select" required>
+                          {% for group in user.groups %}
+                          <option value="{{ group.id }}">{{ group.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-danger">Remove</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    function generatePassword() {
-        const length = 12;
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
-        let password = "";
-        for (let i = 0, n = charset.length; i < length; ++i) {
-            password += charset.charAt(Math.floor(Math.random() * n));
-        }
-        return password;
-    }
+  function generatePassword() {
+      const length = 16;
+      const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+      let password;
+      do {
+          password = "";
+          for (let i = 0; i < length; ++i) {
+              password += charset.charAt(Math.floor(Math.random() * charset.length));
+          }
+      } while (!checkPasswordStrength(password).isStrong);
+      return password;
+  }
 
-    function showGeneratedPassword(userId) {
-        const generatedPassword = generatePassword();
-        const passwordInput = document.getElementById(`new_password_${userId}`);
-        const confirmPasswordInput = document.getElementById(`confirm_password_${userId}`);
-        const generatedPasswordContainer = document.getElementById(`generatedPasswordContainer_${userId}`);
-        const generatedPasswordField = document.getElementById(`generatedPassword_${userId}`);
+  function checkPasswordStrength(password) {
+      let strength = 0;
+      let feedback = [];
 
-        passwordInput.value = generatedPassword;
-        confirmPasswordInput.value = generatedPassword;
-        generatedPasswordField.value = generatedPassword;
-        generatedPasswordContainer.classList.remove("d-none");
-    }
+      if (password.length < 8) {
+          feedback.push("at least 8 characters long");
+      } else {
+          strength += 1;
+      }
+      if (!password.match(/[a-z]+/)) {
+          feedback.push("include lowercase letters");
+      } else {
+          strength += 1;
+      }
+      if (!password.match(/[A-Z]+/)) {
+          feedback.push("include uppercase letters");
+      } else {
+          strength += 1;
+      }
+      if (!password.match(/[0-9]+/)) {
+          feedback.push("include numbers");
+      } else {
+          strength += 1;
+      }
+      if (!password.match(/[$@#&!]+/)) {
+          feedback.push("include special characters");
+      } else {
+          strength += 1;
+      }
 
-    function copyToClipboard(userId) {
-        const generatedPasswordField = document.getElementById(`generatedPassword_${userId}`);
-        generatedPasswordField.select();
-        document.execCommand("copy");
-    }
+      return {
+          isStrong: strength === 5,
+          feedback: feedback,
+      };
+  }
 
-    document.querySelectorAll('.generatePasswordBtn').forEach(button => {
-        button.addEventListener('click', function () {
-            const userId = this.getAttribute('data-user-id');
-            showGeneratedPassword(userId);
+  function showGeneratedPassword(userId) {
+      const generatedPassword = generatePassword();
+      const passwordInput = document.getElementById(`new_password_${userId}`);
+      const confirmPasswordInput = document.getElementById(`confirm_password_${userId}`);
+      const generatedPasswordContainer = document.getElementById(`generatedPasswordContainer_${userId}`);
+      const generatedPasswordField = document.getElementById(`generatedPassword_${userId}`);
+
+      if (passwordInput) passwordInput.value = generatedPassword;
+      if (confirmPasswordInput) confirmPasswordInput.value = generatedPassword;
+      if (generatedPasswordField) generatedPasswordField.value = generatedPassword;
+      if (generatedPasswordContainer) generatedPasswordContainer.classList.remove("d-none");
+
+      // Update password visibility icons
+      updatePasswordVisibilityIcon(`new_password_${userId}`);
+      updatePasswordVisibilityIcon(`confirm_password_${userId}`);
+
+      toastr.success("Strong password generated");
+  }
+
+  function copyToClipboard(userId) {
+      const generatedPasswordField = document.getElementById(`generatedPassword_${userId}`);
+      if (generatedPasswordField) {
+          generatedPasswordField.select();
+          document.execCommand("copy");
+          toastr.success("Password copied to clipboard");
+      }
+  }
+
+  function togglePasswordVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) {
+          const type = input.getAttribute("type") === "password" ? "text" : "password";
+          input.setAttribute("type", type);
+          updatePasswordVisibilityIcon(inputId);
+      }
+  }
+
+  function updatePasswordVisibilityIcon(inputId) {
+      const input = document.getElementById(inputId);
+      const icon = input.nextElementSibling.querySelector("i");
+      if (icon) {
+          if (input.getAttribute("type") === "password") {
+              icon.classList.remove("fa-eye-slash");
+              icon.classList.add("fa-eye");
+          } else {
+              icon.classList.remove("fa-eye");
+              icon.classList.add("fa-eye-slash");
+          }
+      }
+  }
+
+  function handleResetPassword(form) {
+      console.log("Form:", form);
+      console.log("Form HTML:", form.outerHTML);
+
+      // Log all form elements
+      console.log("All form elements:");
+      for (let i = 0; i < form.elements.length; i++) {
+          console.log(form.elements[i].name + ": " + form.elements[i].tagName + " - " + form.elements[i].type);
+      }
+
+      const userIdInput = form.elements.namedItem('user_id');
+      const newPasswordInput = form.elements.namedItem('new_password');
+      const confirmPasswordInput = form.elements.namedItem('confirm_password');
+
+      console.log("User ID Input:", userIdInput);
+      console.log("New Password Input:", newPasswordInput);
+      console.log("Confirm Password Input:", confirmPasswordInput);
+
+      if (!userIdInput || !newPasswordInput || !confirmPasswordInput) {
+          console.error('Missing fields:', {
+              userIdInput: !!userIdInput,
+              newPasswordInput: !!newPasswordInput,
+              confirmPasswordInput: !!confirmPasswordInput
+          });
+          toastr.error('Form is missing required fields');
+          return false;
+      }
+
+      const userId = userIdInput.value;
+      const newPassword = newPasswordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+
+      console.log("User ID:", userId);
+      console.log("New Password:", newPassword ? '[REDACTED]' : 'empty');
+      console.log("Confirm Password:", confirmPassword ? '[REDACTED]' : 'empty');
+
+      if (!newPassword) {
+          toastr.error('New password is required');
+          return false;
+      }
+
+      const { isStrong, feedback } = checkPasswordStrength(newPassword);
+
+      if (!isStrong) {
+          toastr.error('Password must ' + feedback.join(", "));
+          return false;
+      } 
+
+      if (newPassword !== confirmPassword) {
+          toastr.error('Passwords do not match');
+          return false;
+      }
+
+      fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              toastr.success(data.message || 'Password reset successfully');
+              const modal = bootstrap.Modal.getInstance(form.closest('.modal'));
+              if (modal) {
+                  modal.hide();
+              }
+          } else {
+              toastr.error(data.message || 'Failed to reset password');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          toastr.error('An unexpected error occurred');
+      });
+
+      return false;
+  }
+
+  // New functions to check for existing usernames and group names
+  function isUsernameTaken(username) {
+      const usernames = Array.from(document.querySelectorAll('.table tbody tr td:nth-child(2)')).map(td => td.textContent.trim());
+      return usernames.includes(username);
+  }
+
+  function isGroupNameTaken(groupName) {
+      const groupNames = Array.from(document.querySelectorAll('.table tbody tr td:nth-child(2)')).map(td => td.textContent.trim());
+      return groupNames.includes(groupName);
+  }
+
+  // Event Listeners
+  document.querySelectorAll(".generatePasswordBtn").forEach((button) => {
+      button.addEventListener("click", function () {
+          const userId = this.getAttribute("data-user-id");
+          if (userId) {
+              showGeneratedPassword(userId);
+          } else {
+              console.error("No user ID found for generate password button");
+          }
+      });
+  });
+
+  document.querySelectorAll(".copyPasswordBtn").forEach((button) => {
+      button.addEventListener("click", function () {
+          const userId = this.getAttribute("data-user-id");
+          copyToClipboard(userId);
+      });
+  });
+
+  document.querySelectorAll(".togglePasswordBtn").forEach((button) => {
+      button.addEventListener("click", function () {
+          const userId = this.getAttribute("data-user-id");
+          const inputId = this.previousElementSibling.id;
+          togglePasswordVisibility(inputId);
+      });
+  });
+
+  document.getElementById("generatePasswordBtn").addEventListener("click", function () {
+      const generatedPassword = generatePassword();
+      const passwordInput = document.getElementById("password");
+      const generatedPasswordContainer = document.getElementById("generatedPasswordContainer");
+      const generatedPasswordField = document.getElementById("generatedPassword");
+
+      passwordInput.value = generatedPassword;
+      generatedPasswordField.value = generatedPassword;
+      generatedPasswordContainer.classList.remove("d-none");
+      toastr.success("Strong password generated");
+  });
+
+  document.getElementById("copyPasswordBtn").addEventListener("click", function () {
+      const generatedPasswordField = document.getElementById("generatedPassword");
+      generatedPasswordField.select();
+      document.execCommand("copy");
+      toastr.success("Password copied to clipboard");
+  });
+
+  // Updated create user form with username check
+  document.querySelector('form[action*="create_user"]').addEventListener("submit", function (e) {
+      e.preventDefault();
+      const username = this.querySelector('input[name="username"]').value.trim();
+      const password = this.querySelector('input[name="password"]').value;
+
+      if (isUsernameTaken(username)) {
+          toastr.error("A user with this username already exists. Please choose a different username.");
+          return;
+      }
+
+      const { isStrong, feedback } = checkPasswordStrength(password);
+      if (!isStrong) {
+          toastr.error("Password must " + feedback.join(", "));
+      } else {
+          toastr.success("User created successfully");
+          this.submit();
+      }
+  });
+
+    // Updated edit user form event listener
+  document.querySelectorAll('form[action*="edit_user"]').forEach((form) => {
+        form.addEventListener("submit", function (e) {
+            const usernameInput = this.querySelector('input[name="username"]');
+            const username = usernameInput.value.trim();
+            const originalUsername = usernameInput.defaultValue.trim();
+
+            if (username !== originalUsername && isUsernameTaken(username)) {
+                e.preventDefault();
+                toastr.error("A user with this username already exists. Please choose a different username.");
+                return;
+            }
+
+            // If we get here, the username is valid or unchanged
+            toastr.success("User updated successfully");
+            // The form will submit naturally
+        });
+  });
+
+  // Updated create group form with group name check
+  document.querySelector('form[action*="create_group"]').addEventListener("submit", function (e) {
+      e.preventDefault();
+      const groupName = this.querySelector('input[name="groupname"]').value.trim();
+
+      if (isGroupNameTaken(groupName)) {
+          toastr.error("A group with this name already exists. Please choose a different name.");
+          return;
+      }
+
+      toastr.success("Group created successfully");
+      this.submit();
+  });
+
+  // Updated edit group form event listener
+  document.querySelectorAll('form[action*="edit_group"]').forEach((form) => {
+        form.addEventListener("submit", function (e) {
+            const groupName = this.querySelector('input[name="groupname"]').value.trim();
+            const originalGroupName = this.querySelector('input[name="groupname"]').defaultValue.trim();
+
+            if (groupName !== originalGroupName && isGroupNameTaken(groupName)) {
+                e.preventDefault();
+                toastr.error("A group with this name already exists. Please choose a different name.");
+            }
         });
     });
 
-    document.querySelectorAll('.copyPasswordBtn').forEach(button => {
-        button.addEventListener('click', function () {
-            const userId = this.getAttribute('data-user-id');
-            copyToClipboard(userId);
-        });
-    });
+  // Add password validation to all reset password forms
+  document.addEventListener("submit", function (e) {
+      if (e.target.classList.contains("reset-password-form")) {
+          e.preventDefault();
+          console.log("Reset password form submitted:", e.target);
+          console.log("Form action:", e.target.action);
+          console.log("Form method:", e.target.method);
+          console.log("Form elements:", e.target.elements);
+          handleResetPassword(e.target);
+      }
+  });
 
-    document.getElementById('generatePasswordBtn').addEventListener('click', function () {
-        const generatedPassword = generatePassword();
-        const passwordInput = document.getElementById('password');
-        const generatedPasswordContainer = document.getElementById('generatedPasswordContainer');
-        const generatedPasswordField = document.getElementById('generatedPassword');
+  // Add notifications for user/group actions
+  document.querySelectorAll('form[action*="delete_user"]').forEach((form) => {
+      form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (confirm("Are you sure you want to delete this user?")) {
+              toastr.success("User deleted successfully");
+              this.submit();
+          }
+      });
+  });
 
-        passwordInput.value = generatedPassword;
-        generatedPasswordField.value = generatedPassword;
-        generatedPasswordContainer.classList.remove("d-none");
-    });
+  document.querySelector('form[action*="associate_user_group"]').addEventListener("submit", function (e) {
+      e.preventDefault();
+      toastr.success("User added to group successfully");
+      this.submit();
+  });
 
-    document.getElementById('copyPasswordBtn').addEventListener('click', function () {
-        const generatedPasswordField = document.getElementById('generatedPassword');
-        generatedPasswordField.select();
-        document.execCommand("copy");
-    });
+  document.querySelector('form[action*="remove_user_from_group"]').addEventListener("submit", function (e) {
+      e.preventDefault();
+      toastr.success("User removed from group successfully");
+      this.submit();
+  });
 });
 </script>

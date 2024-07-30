@@ -1,0 +1,92 @@
+<form id="client-testing-form" action="{{ url_for('home_blueprint.create_machine', environment='other_domain') }}" method="post">
+    <input type="hidden" name="client_machines" id="client_machines_list">
+    <input type="hidden" name="item_id" value="{{ domain_item.id }}">
+    <input type="hidden" name="domain_name" id="domain_name">
+    <div class="card bg-dark text-white shadow-sm mb-4">
+        <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-building"></i> Domain Network: {{ domain_item.network_address }}</h4>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="modeSwitch" checked>
+                <label class="form-check-label" for="modeSwitch">Single Mode</label>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Domain name and admin user fields -->
+            <div class="mb-3 row">
+                <label class="col-sm-2 col-form-label">Domain Name <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control bg-dark text-white" value="{{ domain_item.domain_name }}" readonly>
+                    <small class="form-text text-muted">Domain name for the network.</small>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label class="col-sm-2 col-form-label">Domain Admin User <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control bg-dark text-white" value="{{ domain_item.domain_admin_user }}" readonly>
+                    <small class="form-text text-muted">Domain admin user for the network.</small>
+                </div>
+            </div>
+            
+            <!-- VM creation fields -->
+            <div class="mb-3 row">
+                <label class="col-sm-2 col-form-label">Hostname <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <input type="text" id="hostname" name="hostname" class="form-control bg-dark text-white" placeholder="Enter a hostname" required>
+                    <small class="form-text text-muted">Please enter a valid hostname.</small>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label class="col-sm-2 col-form-label">IP Address <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    {% set first_three_octets = domain_item.network_address.split('.')[:3] | join('.') %}
+                    <input type="text" id="ipaddress" name="ipaddress" class="form-control bg-dark text-white" placeholder="{{ first_three_octets }}." value="{{ first_three_octets }}." required>
+                    <small class="form-text text-muted">Enter the IP address (e.g., {{ first_three_octets }}.x).</small>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="imagetype" class="col-sm-2 col-form-label">Image Type <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <select id="imagetype" name="imagetype" class="form-select bg-dark text-white" required>
+                        <option value="">Select Image Type</option>
+                        {% for image in vm_images %}
+                            <option value="{{ image.image_template_name }}|{{ image.ansible_match_name }}|{{ image.vmware_os_type }}|{{ image.image_human_name }}|{{ image.image_icon_name }}">{{ image.image_human_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Select the desired image type.</small>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="cpu" class="col-sm-2 col-form-label">CPU <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <select id="cpu" name="cpu" class="form-select bg-dark text-white" required>
+                        <option value="2" selected>2</option>
+                        <option value="4">4</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                        <option value="12">12</option>
+                    </select>
+                    <small class="form-text text-muted">Select the number of CPUs.</small>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="ram" class="col-sm-2 col-form-label">RAM <span class="text-danger">*</span></label>
+                <div class="col-sm-4">
+                    <select id="ram" name="ram" class="form-select bg-dark text-white" required>
+                        <option value="2048">2 GB</option>
+                        <option value="4096" selected>4 GB</option>
+                        <option value="6144">6 GB</option>
+                        <option value="8192">8 GB</option>
+                        <option value="10240">10 GB</option>
+                        <option value="12288">12 GB</option>
+                        <option value="16384">16 GB</option>
+                    </select>
+                    <small class="form-text text-muted">Select the amount of RAM.</small>
+                </div>
+            </div>
+            <div class="text-start">
+                <button type="submit" class="btn btn-success" id="createVmButton"><i class="fas fa-plus"></i> Create VM</button>
+            </div>
+        </div>
+    </div>
+</form>

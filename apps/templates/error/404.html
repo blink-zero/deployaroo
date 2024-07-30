@@ -1,30 +1,169 @@
-{% extends "layouts/base.html" %}
-{% block title %} Error {% endblock %}
-{% block content %}
+{% extends "layouts/base-error.html" %}
+{% block title %}Page Not Found (404){% endblock %}
 
-<div class="content">
-  <div class="container">
-    <div class="row pt-5">
-      <div class="col-md-6 mt-5 offset-md-3 pt-5 mt-5">
-        <div class="card">
-          <div class="card-header text-center py-4">
-            <img src="{{ url_for('static', filename='images/error.png') }}" class="app-logo" width="200px" height="200px" style="padding-bottom: 30px;">
-            <h3 class="title">Error 404</h3>
-          </div>
-          <div class="card-body px-2 py-2">
-            <p class="text-center">
-              Page not found. The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-            </p>
-            <p class="text-center">
-              <a href="{{ url_for('home_blueprint.home') }}" class="btn btn-primary">Go Back</a>
-            </p>
-            <p class="text-center">
-              <a href="{{ url_for('home_blueprint.home') }}" class="btn btn-secondary">Return to Home</a>
-            </p>
-          </div>
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    :root {
+        --bg-dark: #1e1f21;
+        --sidebar-bg: #2c3e50;
+        --bg-card: #212529;
+        --text-light: #e4e6eb;
+        --text-muted: #94a3b8;
+        --border-color: #3a3b3d;
+        --accent-color: #1abc9c;
+        --input-bg: #2c3e50;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-dark) !important;
+        color: var(--text-light) !important;
+    }
+
+    .error-page {
+        background: linear-gradient(135deg, var(--bg-dark) 0%, var(--sidebar-bg) 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .error-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 3rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .error-icon {
+        font-size: 4rem;
+        color: var(--warning-color);
+        text-align: center;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+
+    .error-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .error-code {
+        font-size: 6rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(45deg, var(--warning-color), var(--danger-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        color: var(--warning-color);
+    }
+
+    .error-body {
+        text-align: center;
+    }
+
+    .error-message {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        color: var(--text-muted);
+    }
+
+    .error-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: var(--warning-color) !important;
+        border: none;
+        color: var(--bg-dark) !important;
+    }
+
+    .btn-primary:hover {
+        background: var(--danger-color) !important;
+        color: var(--text-light) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-outline {
+        border: 2px solid var(--warning-color);
+        color: var(--warning-color);
+        background: transparent;
+    }
+
+    .btn-outline:hover {
+        background: var(--warning-color);
+        color: var(--bg-dark);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="error-card">
+                    <div class="error-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="error-header">
+                        <h1 class="error-code">404</h1>
+                        <h2 class="error-title">Page Not Found</h2>
+                    </div>
+                    <div class="error-body">
+                        <p class="error-message">Oops! The page you're looking for doesn't exist or has been moved.</p>
+                        <div class="error-actions">
+                            <a href="{{ url_for('home_blueprint.home') }}" class="btn btn-primary">Go Home</a>
+                            <button onclick="history.back()" class="btn btn-outline">Go Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock content %}

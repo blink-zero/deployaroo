@@ -16,6 +16,7 @@ import configparser
 import ansible_runner
 import yaml
 import json
+from apps.settings.util import send_discord_notification
 from apps.utils.logging import log_json
 
 
@@ -92,6 +93,14 @@ def run_playbook_standard(app: Flask, history_id: int, environment, inventory_fi
         logging.info(f"Updated history {history_obj.id} with status {ansible_status}")
 
         db.session.commit()
+
+        # Discord notification
+        config = ConfigModel.query.first()
+        if config:
+            if ansible_status == "Completed" and config.notify_completed:
+                send_discord_notification(f"Build completed successfully for VM: {history_obj.hostname}")
+            elif ansible_status == "Failed" and config.notify_failed:
+                send_discord_notification(f"Build failed for VM: {history_obj.hostname}")
 
     os.remove(inventory_path)
     logging.info(f"Removed Inventory File: {inventory_path}")

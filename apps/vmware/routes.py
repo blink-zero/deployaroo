@@ -1,6 +1,7 @@
 from datetime import datetime
 from functools import wraps
 import logging
+import ssl
 from threading import Lock
 import os
 import json
@@ -18,6 +19,8 @@ import base64
 import requests
 from retrying import retry
 from time import sleep
+from pyVim import connect
+from pyVmomi import vim
 
 vcenter_session_id = None
 auth_lock = Lock()
@@ -65,6 +68,26 @@ def cleanup_auth(response):
         pass
 
     return response
+
+def get_vmware_connection():
+    config = ConfigModel.query.first()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    context.verify_mode = ssl.CERT_NONE
+    return connect.SmartConnect(
+        host=config.vcenter_server,
+        user=config.vcenter_username,
+        pwd=config.vcenter_password,
+        sslContext=context
+    )
+
+def get_vm_by_name(content, vm_name):
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, [vim.VirtualMachine], True
+    )
+    for vm in container.view:
+        if vm.name == vm_name:
+            return vm
+    return None
 
 blueprint.before_request(setup_auth)
 

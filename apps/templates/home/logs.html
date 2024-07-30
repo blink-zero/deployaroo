@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %} Logs {% endblock %}
+{% block title %}Logs{% endblock %}
 {% block content %}
 
 <!-- Link to the external CSS file -->
@@ -13,46 +13,56 @@
         {% include 'includes/navbar.html' %}
         <div class="content flex-grow-1 p-4">
             <div class="container-fluid">
-                <div class="page-title">
-                    <h3>Logs</h3>
+                <div class="page-title d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-white"><i class="fas fa-terminal me-2"></i>Logs</h2>
+                    <div>
+                        <button class="btn btn-outline-light" id="themeToggle">
+                            <i class="fas fa-moon"></i> Theme
+                        </button>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-12 col-lg-12">
-                        <div class="card shadow-sm">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-terminal"></i> Logging</span>
-                                <div>
-                                    <button class="btn btn-sm btn-secondary" id="themeToggle">
-                                        Switch Theme
-                                    </button>
-                                    <label class="ms-3">
-                                        Auto-Refresh
-                                        <label class="switch ms-2">
-                                            <input type="checkbox" id="autoRefreshToggle">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </label>
+                <div class="card shadow-sm bg-dark text-white">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <label class="me-2">Auto-Refresh</label>
+                                <div class="form-check form-switch d-inline-block">
+                                    <input class="form-check-input" type="checkbox" id="autoRefreshToggle">
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="d-flex mb-3">
-                                    <input type="text" id="searchInput" class="form-control" placeholder="Filter logs...">
-                                    <button class="btn btn-secondary ms-2" onclick="filterLogs()">
-                                        <i class="fas fa-search"></i> Filter
-                                    </button>
-                                </div>
-                                <div class="bg-dark text-white p-3 rounded log-container" style="overflow-y: auto; max-height: 50vh;">
-                                    <div id="output" style="white-space: pre-wrap; word-wrap: break-word; height: 100%;"></div>
-                                </div>
-                                <div class="text-end mt-3">
-                                    <form method="GET" action="/download/server_log" class="d-inline">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-download"></i> Download
-                                        </button>
-                                    </form>
-                                    <p class="mt-2 text-muted">Download to see all logs</p>
-                                </div>
+                            <div id="logCounter" class="badge bg-primary">Logs: 0</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-light" id="clearLogs">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                            <a href="/download/server_log" class="btn btn-outline-light ms-2">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 d-flex">
+                            <input type="text" id="searchInput" class="form-control bg-dark text-white" placeholder="Filter logs...">
+                            <button class="btn btn-primary ms-2" onclick="filterLogs()">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="me-2">Log Level:</label>
+                            <div class="btn-group" role="group" aria-label="Log level filter">
+                                <input type="checkbox" class="btn-check" id="btn-check-info" autocomplete="off" checked>
+                                <label class="btn btn-outline-info" for="btn-check-info">Info</label>
+
+                                <input type="checkbox" class="btn-check" id="btn-check-warning" autocomplete="off" checked>
+                                <label class="btn btn-outline-warning" for="btn-check-warning">Warning</label>
+
+                                <input type="checkbox" class="btn-check" id="btn-check-error" autocomplete="off" checked>
+                                <label class="btn btn-outline-danger" for="btn-check-error">Error</label>
                             </div>
+                        </div>
+                        <div class="bg-darker text-white p-3 rounded log-container" style="height: 60vh; overflow-y: auto;">
+                            <div id="output" style="white-space: pre-wrap; word-wrap: break-word;"></div>
                         </div>
                     </div>
                 </div>
@@ -61,14 +71,19 @@
     </div>
 </div>
 
+{% include 'includes/toastr.html' %}
+
 <script>
     let autoRefresh = false;
     let refreshInterval;
+    let logCount = 0;
 
     function fetchLogs() {
         fetch('/log.json')
             .then(response => response.json())
             .then(data => {
+                logCount = data.length;
+                updateLogCounter();
                 displayLogs(data.slice(0, 100)); // Display only the most recent 100 logs
             })
             .catch(error => {
@@ -85,61 +100,65 @@
             const logEntry = document.createElement('div');
             logEntry.classList.add('log-entry');
             logEntry.setAttribute('data-index', index);
+            logEntry.setAttribute('data-level', log.level.toLowerCase());
 
-            // Create elements for timestamp, user, and message
+            const logLevel = document.createElement('span');
+            logLevel.classList.add('log-level', `log-level-${log.level.toLowerCase()}`);
+            logLevel.textContent = log.level.toUpperCase();
+
             const timestamp = document.createElement('span');
             timestamp.classList.add('log-timestamp');
             timestamp.textContent = log.timestamp;
 
             const user = document.createElement('span');
             user.classList.add('log-user');
-            user.textContent = `User: ${log.user}`;
+            user.textContent = log.user;
 
             const message = document.createElement('span');
             message.classList.add('log-message');
-            message.textContent = `Message: ${log.message}`;
+            message.textContent = log.message;
 
             const caret = document.createElement('span');
             caret.classList.add('caret');
-            caret.innerHTML = '<i class="fas fa-caret-down"></i>';
-            caret.style.cursor = 'pointer';
-            caret.addEventListener('click', () => {
-                const details = document.querySelector(`.log-details[data-index="${index}"]`);
-                if (details.style.display === 'none') {
-                    details.style.display = 'block';
-                    caret.innerHTML = '<i class="fas fa-caret-up"></i>';
-                } else {
-                    details.style.display = 'none';
-                    caret.innerHTML = '<i class="fas fa-caret-down"></i>';
-                }
-            });
+            caret.innerHTML = '<i class="fas fa-caret-right"></i>';
+            caret.addEventListener('click', () => toggleDetails(index));
 
-            // Create a container for additional details
+            logEntry.appendChild(caret);
+            logEntry.appendChild(logLevel);
+            logEntry.appendChild(timestamp);
+            logEntry.appendChild(user);
+            logEntry.appendChild(message);
+
             const details = document.createElement('div');
             details.classList.add('log-details');
             details.setAttribute('data-index', index);
             details.style.display = 'none';
 
             for (const key in log) {
-                if (key !== 'timestamp' && key !== 'user' && key !== 'message') {
+                if (!['level', 'timestamp', 'user', 'message'].includes(key)) {
                     const detail = document.createElement('div');
-                    detail.textContent = `${key}: ${log[key]}`;
+                    detail.textContent = `${key}: ${JSON.stringify(log[key])}`;
                     details.appendChild(detail);
                 }
             }
 
-            // Append elements to the log entry
-            logEntry.appendChild(caret);
-            logEntry.appendChild(timestamp);
-            logEntry.appendChild(document.createTextNode(' - '));
-            logEntry.appendChild(user);
-            logEntry.appendChild(document.createTextNode(' - '));
-            logEntry.appendChild(message);
-
-            // Append log entry and details to the output
             output.appendChild(logEntry);
             output.appendChild(details);
         });
+
+        applyLogLevelFilter();
+    }
+
+    function toggleDetails(index) {
+        const caret = document.querySelector(`.log-entry[data-index="${index}"] .caret`);
+        const details = document.querySelector(`.log-details[data-index="${index}"]`);
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+            caret.innerHTML = '<i class="fas fa-caret-down"></i>';
+        } else {
+            details.style.display = 'none';
+            caret.innerHTML = '<i class="fas fa-caret-right"></i>';
+        }
     }
 
     function filterLogs() {
@@ -158,24 +177,57 @@
 
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
+        const themeIcon = document.querySelector('#themeToggle i');
+        themeIcon.classList.toggle('fa-moon');
+        themeIcon.classList.toggle('fa-sun');
     }
-
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
     function toggleAutoRefresh() {
         autoRefresh = !autoRefresh;
         if (autoRefresh) {
             refreshInterval = setInterval(fetchLogs, 5000);
+            toastr.success('Auto-refresh enabled');
         } else {
             clearInterval(refreshInterval);
+            toastr.info('Auto-refresh disabled');
         }
     }
 
+    function updateLogCounter() {
+        document.getElementById('logCounter').textContent = `Logs: ${logCount}`;
+    }
+
+    function applyLogLevelFilter() {
+        const showInfo = document.getElementById('btn-check-info').checked;
+        const showWarning = document.getElementById('btn-check-warning').checked;
+        const showError = document.getElementById('btn-check-error').checked;
+
+        document.querySelectorAll('.log-entry').forEach(entry => {
+            const level = entry.getAttribute('data-level');
+            if ((level === 'info' && showInfo) ||
+                (level === 'warning' && showWarning) ||
+                (level === 'error' && showError)) {
+                entry.style.display = 'block';
+            } else {
+                entry.style.display = 'none';
+            }
+        });
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('autoRefreshToggle').addEventListener('change', toggleAutoRefresh);
+    document.getElementById('clearLogs').addEventListener('click', () => {
+        document.getElementById('output').innerHTML = '';
+        logCount = 0;
+        updateLogCounter();
+        toastr.success('Logs cleared');
+    });
+
+    ['btn-check-info', 'btn-check-warning', 'btn-check-error'].forEach(id => {
+        document.getElementById(id).addEventListener('change', applyLogLevelFilter);
+    });
 
     document.addEventListener('DOMContentLoaded', fetchLogs);
 </script>
-
-{% include 'includes/toastr.html' %}
 
 {% endblock content %}

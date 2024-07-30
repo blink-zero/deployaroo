@@ -1,7 +1,9 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from flask import current_app
 
 def encrypt_password(password: str) -> str:
+    if not password:
+        return ''
     f = Fernet(current_app.config['ENCRYPTION_KEY'])
     encrypted_password = f.encrypt(password.encode())
     return encrypted_password.decode()

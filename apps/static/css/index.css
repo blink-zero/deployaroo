@@ -1,78 +1,216 @@
+/* Specific styles for index page */
+.card {
+  background: #3a3b3d;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card .icon-big {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.vm-image {
+  width: 50px;
+  height: 50px;
+}
+
+.vm-image-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.card-details p {
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+
+.page-title {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+h3.text-white {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+h6.text-white {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.modern-card {
+  background: rgba(58, 59, 61, 0.7) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Badge Styles */
+.state-icon .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .badge.bg-success {
-    background-color: #28a745 !important;
-    color: #fff !important;
+  background-color: var(--success-color) !important;
+  color: var(--text-light) !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--warning-color) !important;
+  color: var(--bg-dark) !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--danger-color) !important;
+  color: var(--text-light) !important;
+}
+
+/* Card body styles */
+.card-body {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-body::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .card-body::before {
+  opacity: 1;
+}
+
+/* Pulse animation for Running status */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-  
-  .badge.bg-warning {
-    background-color: #ffc107 !important;
-    color: #fff !important;
+  50% {
+    transform: scale(1.05);
   }
-  
-  .badge.bg-danger {
-    background-color: #dc3545 !important;
-    color: #fff !important;
+  100% {
+    transform: scale(1);
   }
-  
-  .table-hover tbody tr:hover {
-    background-color: #f8f9fa;
+}
+
+/* Quick History Table styles */
+#quickHistoryTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#quickHistoryTable tbody tr {
+  background-color: #2c3e50;
+}
+
+#quickHistoryTable td {
+  padding: 12px;
+  vertical-align: middle;
+  position: relative;
+}
+
+#quickHistoryTable tbody tr:hover {
+  background-color: #2c3e50;
+}
+
+#quickHistoryTable a {
+  color: var(--accent-color);
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+}
+
+#quickHistoryTable a:hover {
+  text-decoration: underline;
+}
+
+#quickHistoryTable td a {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  margin: -12px;
+}
+
+/* Neon glow effect for icons */
+.icon-big {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1f21;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Animated gradient background */
+body {
+  background: linear-gradient(-45deg, #1e1f21, #2c3e50, #34495e, #2c3e50);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
   }
-  
-  .table thead th {
-    background-color: #f1f1f1;
+  50% {
+    background-position: 100% 50%;
   }
-  
-  .card {
-    border-radius: 0.5rem;
+  100% {
+    background-position: 0% 50%;
   }
-  
-  .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-  }
-  
-  .card-body {
-    padding: 1.5rem;
-  }
-  
-  .table th,
-  .table td {
-    vertical-align: middle;
-  }
-  
-  .icon-big {
-    font-size: 1.5rem;
-  }
-  
-  .icon-big.bg-primary {
-    background-color: #007bff;
-  }
-  
-  .icon-big.bg-success {
-    background-color: #28a745;
-  }
-  
-  .icon-big.bg-warning {
-    background-color: #ffc107;
-  }
-  
-  .icon-big.bg-danger {
-    background-color: #dc3545;
-  }
-  
-  .icon-big.bg-info {
-    background-color: #17a2b8;
-  }
-  
-  .icon-big.bg-secondary {
-    background-color: #6c757d;
-  }
-  
-  .icon-big.bg-light {
-    background-color: #f8f9fa;
-    color: #343a40;
-  }
-  
-  .text-muted {
-    color: #6c757d !important;
-  }
-  
+}
+
+/* Improve readability of text on cards */
+.card-body h6, .card-body h3 {
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}

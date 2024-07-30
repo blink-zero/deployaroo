@@ -1,9 +1,10 @@
 {% extends "layouts/base.html" %}
-{% block title %} History {% endblock %}
+{% block title %}VM Build History{% endblock %}
 {% block content %}
 
-<!-- Link to the external CSS file -->
+<!-- Link to the external CSS files -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap5.min.css') }}">
 
 <div class="wrapper d-flex">
   <div id="sidebar">{% include 'includes/sidebar.html' %}</div>
@@ -11,175 +12,725 @@
     {% include 'includes/navbar.html' %}
     <div class="content flex-grow-1 p-4">
       <div class="container-fluid">
-        <div class="page-title">
-          <h3>History</h3>
+        <div class="page-title d-flex justify-content-between align-items-center mb-4">
+          <h1 class="h3 mb-0 text-white">VM Build History</h1>
+          <button class="btn btn-outline-light" onclick="refreshPage()">
+            <i class="fas fa-sync-alt me-2"></i> Refresh
+          </button>
         </div>
-        <div class="row">
-          <div class="col-md-12 col-lg-12">
-            <div class="card shadow-sm">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Previously Built Virtual Machines</span>
-                <button class="btn btn-sm btn-secondary" onclick="refreshPage()">
-                  Refresh Table <i class="fas fa-sync"></i>
-                </button>
-              </div>
-              <div class="card-body">
-                <form method="GET" action="{{ url_for('home_blueprint.history') }}">
-                  <div class="row mb-3">
-                    <div class="col-md-4">
-                      <input
-                        type="text"
-                        name="search"
-                        id="searchInput"
-                        class="form-control"
-                        placeholder="Search..."
-                        value="{{ search_query }}"
-                      />
-                    </div>
-                    <div class="col-md-2">
-                      <button type="submit" class="btn btn-primary">Search</button>
-                    </div>
+        <div class="card shadow-sm bg-dark text-white">
+          <div class="card-body">
+            <form method="GET" action="{{ url_for('home_blueprint.history') }}" id="searchForm">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <div class="input-group">
+                    <input type="text" name="search" id="searchInput" class="form-control bg-dark text-white" placeholder="Search..." value="{{ search_query }}">
+                    <button class="btn btn-primary" type="submit">
+                      <i class="fas fa-search"></i>
+                    </button>
                   </div>
-                </form>
-                <p class="text-muted">
-                  You can search by Hostname, IP Address, Image Type, and Environment.
-                </p>
-
-                {% if data.items %}
-                <div class="table-responsive">
-                  <table class="table table-hover table-bordered" id="dataTable">
-                    <thead>
-                      <tr>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='id', order='asc' if sort_order == 'desc' else 'desc') }}">#</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='starttime', order='asc' if sort_order == 'desc' else 'desc') }}">Start</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='status', order='asc' if sort_order == 'desc' else 'desc') }}">State</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='ipaddress', order='asc' if sort_order == 'desc' else 'desc') }}">IP Address</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='hostname', order='asc' if sort_order == 'desc' else 'desc') }}">Hostname</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='imagetype', order='asc' if sort_order == 'desc' else 'desc') }}">Image</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='env', order='asc' if sort_order == 'desc' else 'desc') }}">Env</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='ram', order='asc' if sort_order == 'desc' else 'desc') }}">RAM</a></th>
-                        <th><a href="{{ url_for('home_blueprint.history', search=search_query, sort='time_taken', order='asc' if sort_order == 'desc' else 'desc') }}">Time Taken</a></th>
-                        <th>Log</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for row in data.items %}
-                      <tr>
-                        <td>{{ row.id }}</td>
-                        <td>{{ row.formatted_starttime }}</td>
-                        <td class="state-icon">
-                          {% if row.status == 'Completed' %}
-                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> {{ row.status }}</span>
-                          {% elif row.status == 'Running' %}
-                            <span class="badge bg-warning"><i class="fas fa-spinner fa-spin"></i> {{ row.status }}</span>
-                          {% elif row.status == 'Failed' %}
-                            <span class="badge bg-danger"><i class="fas fa-times-circle"></i> {{ row.status }}</span>
-                          {% endif %}
-                        </td>
-                        <td>{{ row.ipaddress }}</td>
-                        <td>{{ row.hostname }}</td>
-                        <td>{{ row.imagetype }}</td>
-                        <td>{{ row.env }}</td>
-                        <td>{{ row.ram }}</td>
-                        <td>
-                          {% if row.time_taken %}
-                            {{ row.time_taken }}
-                          {% else %}
-                            N/A
-                          {% endif %}
-                        </td>
-                        <td>
-                          {% if row.ansible_log_path %}
-                            <button class="btn btn-link badge-view-log" onclick="viewLog({{ row.id }})"><i class="fas fa-file-alt"></i> View Log</button>
-                          {% else %}
-                            N/A
-                          {% endif %}
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
                 </div>
-                {% else %}
-                <p>No records found</p>
-                {% endif %}
+                <div class="col-md-8 text-md-end">
+                  <div class="btn-group" role="group" aria-label="Export options">
+                    <a href="{{ url_for('home_blueprint.export_history_csv') }}" class="btn btn-outline-light">
+                      <i class="fas fa-file-csv me-2"></i> Export CSV
+                    </a>
+                    <a href="{{ url_for('home_blueprint.export_history_pdf') }}" class="btn btn-outline-light">
+                      <i class="fas fa-file-pdf me-2"></i> Export PDF
+                    </a>
+                  </div>
+                </div>
               </div>
+              <input type="hidden" name="sort" id="sortInput" value="{{ sort_column }}">
+              <input type="hidden" name="order" id="orderInput" value="{{ sort_order }}">
+            </form>
+            <div class="table-responsive">
+              <table class="table table-hover table-dark" id="historyTable">
+                <thead>
+                  <tr>
+                    <th><a href="#" class="sort-link text-white" data-sort="id">#</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="starttime">Start Time</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="status">State</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="ipaddress">IP Address</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="hostname">Hostname</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="imagetype">Template</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="env">Env</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="ram">RAM</a></th>
+                    <th><a href="#" class="sort-link text-white" data-sort="time_taken">Time Taken</a></th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in data.items %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.formatted_starttime }}</td>
+                    <td class="state-icon">
+                      {% set status_icons = {
+                        'Completed': {'icon': 'fa-check-circle', 'color': 'success', 'text': 'Completed'},
+                        'Running': {'icon': 'fa-spinner fa-spin', 'color': 'warning', 'text': 'Running'},
+                        'Failed': {'icon': 'fa-times-circle', 'color': 'danger', 'text': 'Failed'}
+                      } %}
+                      {% set status = status_icons.get(row.status, {'icon': 'fa-question-circle', 'color': 'secondary', 'text': 'Unknown'}) %}
+                      <span class="badge bg-{{ status.color }} text-white">
+                        <i class="fas {{ status.icon }}"></i> {{ status.text }}
+                      </span>
+                    </td>
+                    <td>{{ row.ipaddress }}</td>
+                    <td>{{ row.hostname }}</td>
+                    <td>{{ row.imagetype }}</td>
+                    <td>{{ row.env }}</td>
+                    <td>{{ row.ram }}</td>
+                    <td>{{ row.time_taken or 'N/A' }}</td>
+                    <td>
+                      <div class="btn-group" role="group" aria-label="VM Actions">
+                        {% if row.ansible_log_path %}
+                          <button class="btn btn-sm btn-outline-light" onclick="viewLog({{ row.id }})" title="View Log">
+                            <i class="fas fa-file-alt"></i>
+                          </button>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-light" onclick="viewDetails({{ row.id }})" title="View Details">
+                          <i class="fas fa-info-circle"></i>
+                        </button>
+                        {% if row.status == 'Completed' %}
+                          <button class="btn btn-sm btn-outline-light" onclick="restartVM({{ row.id }})" title="Restart VM">
+                            <i class="fas fa-redo"></i>
+                          </button>
+                          <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="postBuildActions{{ row.id }}" data-bs-toggle="dropdown" aria-expanded="false" title="Post-Build Actions">
+                              <i class="fas fa-tools"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="postBuildActions{{ row.id }}">
+                              <li><a class="dropdown-item" href="#" onclick="showPostBuildActionModal({{ row.id }}, 'increase_disk')">Increase Disk Size</a></li>
+                              <li><a class="dropdown-item" href="#" onclick="showPostBuildActionModal({{ row.id }}, 'change_password')">Change User Password</a></li>
+                              <li><a class="dropdown-item" href="#" onclick="showPostBuildActionModal({{ row.id }}, 'update_os')">Update OS</a></li>
+                            </ul>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                Showing {{ data.items | length }} of {{ data.total }} entries
+              </div>
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-end">
+                  {% for page in data.iter_pages() %}
+                    {% if page %}
+                      <li class="page-item {% if page == data.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=page) }}">{{ page }}</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </nav>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="pagination justify-content-center mt-4">
-      {{ data.items | length }} records shown.
-      <span class="mx-3">{{ pagination.info }}</span>
-      <nav>
-        <ul class="pagination">
-          {% if data.has_prev %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=data.prev_num) }}">Previous</a>
-          </li>
-          {% endif %}
-          {% for p in data.iter_pages() %}
-          {% if p %}
-          <li class="page-item {% if p == data.page %}active{% endif %}">
-            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=p) }}">{{ p }}</a>
-          </li>
-          {% else %}
-          <li class="page-item disabled"><span class="page-link">…</span></li>
-          {% endif %}
-          {% endfor %}
-          {% if data.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('home_blueprint.history', search=search_query, sort=sort_column, order=sort_order, page=data.next_num) }}">Next</a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
     </div>
   </div>
 </div>
 
 <!-- Modal for displaying logs -->
 <div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl" style="max-width: 80%;">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable custom-wide-modal">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
         <h5 class="modal-title" id="logModalLabel">Ansible Log</h5>
-        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <div class="modal-body">
         <pre><code id="logContent" class="language-ansible"></code></pre>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-  function refreshPage() {
-    location.reload();
-  }
+<!-- Modal for VM Details -->
+<div class="modal fade" id="vmDetailsModal" tabindex="-1" aria-labelledby="vmDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="vmDetailsModalLabel">VM Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="vmDetailsContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  function viewLog(historyId) {
-    fetch(`/ansible_log/${historyId}`)
+<!-- Modal for restart confirmation -->
+<div class="modal fade" id="confirmRestartModal" tabindex="-1" aria-labelledby="confirmRestartModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRestartModalLabel">Confirm VM Restart</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to restart this VM?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRestartBtn">Restart VM</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Post-Build Action -->
+<div class="modal fade" id="postBuildActionModal" tabindex="-1" aria-labelledby="postBuildActionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="postBuildActionModalLabel">Post-Build Action</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="postBuildActionForm">
+          <div id="actionInputs"></div>
+        </form>
+        <div id="actionStatus" class="mt-3" style="max-height: 200px; overflow-y: auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
+        <button type="button" class="btn btn-primary" id="confirmPostBuildActionBtn"><i class="fas fa-play"></i> Execute</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'includes/toastr.html' %}
+
+<!-- Include static JavaScript files -->
+<script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap5.min.js') }}"></script>
+
+<script>
+
+const actionConfigs = {
+  'increase_disk': {
+    title: 'Increase Disk Size',
+    description: `
+      <p>This action allows you to increase the disk size of your virtual machine.</p>
+      <ul>
+        <li>The new size must be larger than the current disk size.</li>
+        <li>This operation extends the disk at the hypervisor level.</li>
+        <li>This operation also extends the partition on the OS after extending the disk.</li>
+        <li>For Windows VMs, it will extend the C: drive.</li>
+        <li>For Linux VMs, it will extend the root partition (/) or LVM if used.</li>
+        <li>Always ensure you have a recent backup before modifying disk sizes.</li>
+      </ul>
+      <p><strong>Note:</strong> Disk size cannot be decreased once increased.</p>
+      <p>You can check the logs for the latest status updates.</p>
+    `,
+    inputs: [
+      { name: 'size', type: 'number', label: 'New Size (GB)', min: 1, step: 1 }
+    ]
+  },
+  'change_password': {
+    title: 'Change User Password',
+    description: `
+      <p>This action allows you to change the password for the template user account on the virtual machine.</p>
+      <ul>
+        <li>The username shown is the template username for this VM and cannot be changed.</li>
+        <li>After changing, the new password will take effect immediately.</li>
+        <li>It's recommended that you log in manually to the machine and change other passwords.</li>
+        <li>Remember to update any services or scheduled tasks that might be using the old password.</li>
+        <li>You can run this as many times as you want.</li>
+      </ul>
+      <p><strong>Note:</strong> Change other user passwords as soon as possible. i.e. root</p>
+      <p>You can check the logs for the latest status updates.</p>
+    `,
+    inputs: [
+      { name: 'username', type: 'text', label: 'Username', readonly: true },
+      { name: 'password', type: 'password', label: 'New Password' }
+    ]
+  },
+  'update_os': {
+    title: 'Update OS',
+    description: `
+      <p>This action initiates an operating system update on the virtual machine.</p>
+      <ul>
+        <li>For Windows VMs, this will run Windows Update to install the latest patches.</li>
+        <li>For Linux VMs, this will update all packages to their latest versions.</li>
+        <li>The update process may take several minutes to complete.</li>
+        <li>Your VM may require a restart after the update process.</li>
+        <li>Ensure all important work is saved before proceeding.</li>
+        <li>It's recommended to perform updates during maintenance windows.</li>
+      </ul>
+      <p><strong>Note:</strong> It is safe to close this modal. The process will continue in the background.</p>
+      <p>You can check the logs for the latest status updates.</p>    
+      `,
+    inputs: [] // No additional inputs needed
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  const table = $('#historyTable').DataTable({
+    "pageLength": 25,
+    "order": [[0, "desc"]],
+    "searching": false,
+    "info": false,
+    "paging": false
+  });
+
+  // Sorting functionality
+  document.querySelectorAll('.sort-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const sort = this.dataset.sort;
+      const currentOrder = document.getElementById('orderInput').value;
+      const newOrder = (currentOrder === 'asc' && sort === document.getElementById('sortInput').value) ? 'desc' : 'asc';
+      
+      document.getElementById('sortInput').value = sort;
+      document.getElementById('orderInput').value = newOrder;
+      document.getElementById('searchForm').submit();
+    });
+  });
+});
+
+function refreshPage() {
+  location.reload();
+}
+
+function viewLog(historyId) {
+  fetch(`/ansible_log/${historyId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.log_content) {
+        document.getElementById('logContent').textContent = data.log_content;
+        Prism.highlightAll();
+        new bootstrap.Modal(document.getElementById('logModal')).show();
+      } else {
+        toastr.error('Log content not found.');
+      }
+    })
+    .catch(() => {
+      toastr.error('Failed to fetch log content.');
+    });
+}
+
+function viewDetails(vmId) {
+  fetch(`/vm_details/${vmId}`)
+    .then(response => response.json())
+    .then(data => {
+      const statusColors = {
+        'Completed': 'success',
+        'Running': 'warning',
+        'Failed': 'danger'
+      };
+      const statusColor = statusColors[data.status] || 'secondary';
+      
+      const machineType = data.designation && data.designation.startsWith('A') ? 'Non-Domain Machine' :
+                          data.designation && data.designation.startsWith('B') ? 'Domain Machine' : 'Unknown';
+      
+      function createInfoItem(title, value) {
+        return `
+          <div class="info-item">
+            <div class="info-item-content">
+              <span class="info-item-title">${title}:</span>
+              <span class="info-item-value">${value}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function calculateTimeTaken(startTime, endTime) {
+        if (!startTime || !endTime) return 'N/A';
+        
+        const parseDate = (dateString) => {
+          const months = {
+            'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+            'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+          };
+          
+          const [, dayName, month, day, year, time] = dateString.match(/(\w+) (\w+), (\d+) (\d+) (\d+:\d+:\d+)/);
+          return new Date(year, months[month], day, ...time.split(':'));
+        };
+        
+        const start = parseDate(startTime);
+        const end = parseDate(endTime);
+        const diff = end - start;
+        
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      const timeTaken = calculateTimeTaken(data.starttime, data.endtime);
+      
+      let domainInfo = '';
+      if (machineType === 'Domain Machine') {
+        domainInfo = `
+          <div class="col-md-6 mb-4">
+            <div class="info-card domain-info">
+              <h5><i class="fas fa-network-wired"></i> Domain Information</h5>
+              ${createInfoItem('Domain Name', data.domain_name || 'N/A')}
+              ${createInfoItem('Domain Admin', data.domain_admin_user || 'N/A')}
+              ${createInfoItem('CentOS OU', data.centos_ou_membership || 'N/A')}
+              ${createInfoItem('Ubuntu OU', data.ubuntu_ou_membership || 'N/A')}
+            </div>
+          </div>
+        `;
+      }
+      
+      const content = `
+        <div class="vm-details-container">
+          <div class="row g-4">
+            <div class="col-md-6 mb-4">
+              <div class="info-card server-info">
+                <h5><i class="fas fa-server"></i> VM Information</h5>
+                ${createInfoItem('Image', data.humanname)}
+                ${createInfoItem('Machine Type', machineType)}
+                ${createInfoItem('Hostname', data.hostname)}
+                ${createInfoItem('IP Address', data.ipaddress)}
+                ${createInfoItem('Template', data.imagetype)}
+                ${createInfoItem('Environment', data.env)}
+                ${createInfoItem('VM OS Type', `${data.group}`)}
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="info-card system-resources">
+                <h5><i class="fas fa-microchip"></i> System Resources</h5>
+                ${createInfoItem('CPU', `${data.cpu} cores`)}
+                ${createInfoItem('RAM', `${data.ram} MB`)}
+                ${createInfoItem('Disk Size', `${data.disk_size} GB`)}
+                ${createInfoItem('VM State', data.vm_state)}
+                ${createInfoItem('Status', `<span class="badge bg-${statusColor}">${data.status}</span>`)}
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="info-card network-config">
+                <h5><i class="fas fa-network-wired"></i> Network Configuration</h5>
+                ${createInfoItem('VM Network', data.vm_network)}
+                ${createInfoItem('Subnet Mask', data.subnet_mask)}
+                ${createInfoItem('Gateway', data.gateway)}
+                ${createInfoItem('DNS 1', data.dns_1)}
+                ${createInfoItem('DNS 2', data.dns_2)}
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="info-card storage-info">
+                <h5><i class="fas fa-database"></i> Storage Information</h5>
+                ${createInfoItem('VM Folder', data.vm_folder)}
+                ${createInfoItem('Datacenter', data.datacenter)}
+                ${createInfoItem('Disk Datastore', data.disk_datastore)}
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="info-card time-info">
+                <h5><i class="fas fa-clock"></i> Time Information</h5>
+                ${createInfoItem('Start Time', data.starttime)}
+                ${createInfoItem('End Time', data.endtime || 'N/A')}
+                ${createInfoItem('Time Taken', timeTaken)}
+              </div>
+            </div>
+            ${domainInfo}
+          </div>
+        </div>
+      `;
+      document.getElementById('vmDetailsContent').innerHTML = content;
+      const modal = new bootstrap.Modal(document.getElementById('vmDetailsModal'));
+      modal._element.classList.add('vm-details-modal');
+      modal.show();
+    })
+    .catch(() => {
+      toastr.error('Failed to fetch VM details.');
+    });
+}
+
+function restartVM(vmId) {
+  fetch(`/restart_vm/${vmId}`, { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        toastr.success('VM restart initiated successfully.');
+      } else {
+        toastr.error('Failed to restart VM.');
+      }
+    })
+    .catch(() => {
+      toastr.error('Failed to initiate VM restart.');
+    });
+}
+
+function restartVM(vmId) {
+  const modal = new bootstrap.Modal(document.getElementById('confirmRestartModal'));
+  modal.show();
+
+  document.getElementById('confirmRestartBtn').onclick = function() {
+    modal.hide();
+    fetch(`/restart_vm/${vmId}`, { method: 'POST' })
       .then(response => response.json())
       .then(data => {
-        if (data.log_content) {
-          document.getElementById('logContent').textContent = data.log_content;
-          Prism.highlightAll();
-          new bootstrap.Modal(document.getElementById('logModal')).show();
+        if (data.success) {
+          toastr.success('VM restart initiated successfully.');
         } else {
-          toastr.error('Log content not found.');
+          toastr.error('Failed to restart VM.');
         }
       })
       .catch(() => {
-        toastr.error('Failed to fetch log content.');
+        toastr.error('Failed to initiate VM restart.');
       });
-  }
-</script>
+  };
+}
 
-{% include 'includes/toastr.html' %}
+// Helper function to determine if the OS is Windows
+function isWindowsOS(guestId) {
+  const windowsGuestIds = [
+    'win31Guest', 'win95Guest', 'win98Guest', 'winntGuest', 'win2000ProGuest',
+    'win2000ServGuest', 'win2000AdvServGuest', 'winXPProGuest', 'winXPPro64Guest',
+    'winNetEnterpriseGuest', 'winNetDatacenterGuest', 'winNetStandardGuest',
+    'winNetWebGuest', 'winNetBusinessGuest', 'winNetEnterprise64Guest',
+    'winNetDatacenter64Guest', 'winNetStandard64Guest', 'winVistaGuest',
+    'winVista64Guest', 'winLonghornGuest', 'winLonghorn64Guest', 'windows7Guest',
+    'windows7_64Guest', 'windows7Server64Guest', 'windows8Guest', 'windows8_64Guest',
+    'windows8Server64Guest', 'windows9Guest', 'windows9_64Guest',
+    'windows9Server64Guest', 'windows2019srv_64Guest'
+  ];
+  return windowsGuestIds.includes(guestId);
+}
+
+function showPostBuildActionModal(vmId, action) {
+  const modal = new bootstrap.Modal(document.getElementById('postBuildActionModal'));
+  const config = actionConfigs[action];
+  
+  document.getElementById('postBuildActionModalLabel').textContent = config.title;
+  
+  const modalBody = document.querySelector('#postBuildActionModal .modal-body');
+  modalBody.innerHTML = `
+    <div class="action-description mb-4">
+      ${config.description}
+    </div>
+    <form id="postBuildActionForm">
+      <div id="actionInputs"></div>
+    </form>
+    <div id="actionStatus" class="mt-3" style="max-height: 200px; overflow-y: auto;"></div>
+  `;
+  
+  const inputsContainer = document.getElementById('actionInputs');
+  
+  if (action === 'increase_disk') {
+    fetch(`/vm_details/${vmId}`)
+      .then(response => response.json())
+      .then(data => {
+        const currentSize = parseInt(data.disk_size);
+        config.inputs.forEach(input => {
+          const div = document.createElement('div');
+          div.className = 'mb-3';
+          div.innerHTML = `
+            <label for="${input.name}" class="form-label">${input.label}</label>
+            <div class="input-group">
+              <span class="input-group-text">Current: ${currentSize} GB</span>
+              <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" min="${currentSize + 1}" step="${input.step}" required>
+              <span class="input-group-text">GB</span>
+            </div>
+          `;
+          inputsContainer.appendChild(div);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching VM details:', error);
+        toastr.error('Failed to fetch VM details');
+      });
+    } else if (action === 'change_password') {
+    fetch(`/vm_details/${vmId}`)
+      .then(response => response.json())
+      .then(data => {
+        let username = isWindowsOS(data.group) ? data.windows_template_username : data.linux_template_username;
+        
+        if (!username) {
+          console.error('Username not found in VM details');
+          username = 'Username not available';
+        }
+
+        config.inputs.forEach(input => {
+          const div = document.createElement('div');
+          div.className = 'mb-3';
+          if (input.name === 'username') {
+            div.innerHTML = `
+              <label for="${input.name}" class="form-label">${input.label}</label>
+              <input type="text" class="form-control" id="${input.name}" name="${input.name}" value="${username}" readonly>
+            `;
+          } else if (input.name === 'password') {
+            div.innerHTML = `
+              <label for="${input.name}" class="form-label">${input.label}</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="${input.name}" name="${input.name}" required>
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            `;
+          } else {
+            div.innerHTML = `
+              <label for="${input.name}" class="form-label">${input.label}</label>
+              <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" required>
+            `;
+          }
+          inputsContainer.appendChild(div);
+        });
+
+        // Add event listener for password visibility toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        togglePassword.addEventListener('click', function () {
+          const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+          passwordInput.setAttribute('type', type);
+          this.querySelector('i').classList.toggle('fa-eye');
+          this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching VM details:', error);
+        toastr.error('Failed to fetch VM details');
+      });
+    } else {
+    config.inputs.forEach(input => {
+      const div = document.createElement('div');
+      div.className = 'mb-3';
+      div.innerHTML = `
+        <label for="${input.name}" class="form-label">${input.label}</label>
+        <input type="${input.type}" class="form-control" id="${input.name}" name="${input.name}" ${input.min ? `min="${input.min}"` : ''} ${input.step ? `step="${input.step}"` : ''} required>
+      `;
+      inputsContainer.appendChild(div);
+    });
+  }
+  
+  document.getElementById('confirmPostBuildActionBtn').onclick = function() {
+    const formData = new FormData(document.getElementById('postBuildActionForm'));
+    executePostBuildAction(vmId, action, Object.fromEntries(formData));
+  };
+  
+  modal.show();
+}  
+
+function executePostBuildAction(vmId, action, inputData) {
+  const modal = bootstrap.Modal.getInstance(document.getElementById('postBuildActionModal'));
+  const statusDiv = document.getElementById('actionStatus');
+  const confirmButton = document.getElementById('confirmPostBuildActionBtn');
+  
+  confirmButton.disabled = true;
+  // statusDiv.innerHTML = '<div class="alert alert-info">Initiating action...</div>';
+
+  fetch(`/execute_post_build_action/${vmId}/${action}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(inputData),
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      if (action === 'update_os' || action === 'change_password' || action === 'increase_disk') {
+        handleStreamingResponse(response, statusDiv, confirmButton, modal, action);
+      } else {
+        return response.json();
+      }
+    })
+    .then(data => {
+      if (data && data.success) {
+        if (action === 'increase_disk') {
+          toastr.success(`Disk size increased to ${data.new_size} GB successfully.`);
+        } else {
+          toastr.success(`${actionConfigs[action].title} completed successfully.`);
+        }
+        confirmButton.disabled = false;
+        confirmButton.textContent = 'Close';
+        confirmButton.onclick = () => {
+          modal.hide();
+          location.reload();
+        };
+      } else if (data) {
+        statusDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+        confirmButton.disabled = false;
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      statusDiv.innerHTML = `<div class="alert alert-danger">Failed to complete ${actionConfigs[action].title}.</div>`;
+      toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+      confirmButton.disabled = false;
+    });
+}
+
+function handleStreamingResponse(response, statusDiv, confirmButton, modal, action) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let toastShown = false;
+
+  function readStream() {
+    reader.read().then(({ done, value }) => {
+      if (done) {
+        console.log('Stream complete');
+        setCompleteState();
+        return;
+      }
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      lines.forEach(line => {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          statusDiv.innerHTML += `<div><em>${data}</em></div>`;
+          statusDiv.scrollTop = statusDiv.scrollHeight;
+        } else if (line.startsWith('event: updateComplete')) {
+          setCompleteState();
+        }
+      });
+
+      readStream();
+    }).catch(error => {
+      console.error('Error in stream:', error);
+      statusDiv.innerHTML += '<div class="alert alert-danger">Error in update stream. Please check logs.</div>';
+      setCompleteState(true);
+    });
+  }
+
+  function setCompleteState(isError = false) {
+    confirmButton.disabled = false;
+    confirmButton.textContent = 'Close';
+    confirmButton.onclick = () => {
+      modal.hide();
+      location.reload();
+    };
+    if (!toastShown) {
+      if (isError) {
+        toastr.error(`Failed to complete ${actionConfigs[action].title}.`);
+      } else {
+        toastr.success(`${actionConfigs[action].title} completed successfully.`);
+      }
+      toastShown = true;
+    }
+  }
+
+  readStream();
+}
+
+// ensure the page refreshes when the modal is dismissed by clicking outside or pressing ESC
+document.getElementById('postBuildActionModal').addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+});
+
+</script>
 
 {% endblock content %}

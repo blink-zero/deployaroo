@@ -156,17 +156,6 @@
   tasks:
   - import_tasks: tasks/vmware_create_linux_ubuntu22.04_developer/main.yml
   serial: 1
-- name: Build Linux Kali 2024.1 Virtual Machine
-  hosts: lin_kali2024.1
-  become: false
-  gather_facts: false
-  collections:
-  - community.vmware
-  pre_tasks:
-  - include_vars: vars/other.yml
-  tasks:
-  - import_tasks: tasks/vmware_create_linux_kali2024.1/main.yml
-  serial: 1
 - name: Build Windows Server 2022 Datacenter Desktop Experience Active Directory Virtual
     Machine
   hosts: win_server2022dc_de_ad
