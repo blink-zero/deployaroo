@@ -4,6 +4,6 @@
     "image_type": "windows",
     "ansible_match_name": "win_server2022dc_core",
     "vmware_os_type": "windows9Server64Guest",
-    "image_icon_name": "WIN.png",
+    "image_icon_name": "operatingsystems/WIN.png",
     "network_type": "ansible-deploy-vm-domain"
 }
