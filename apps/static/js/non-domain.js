@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
             card.style.animationDelay = `${index * 0.1}s`;
             card.innerHTML = `
                 <div class="card-body d-flex align-items-center p-3">
-                    <img src="/static/images/64x64/${vm.imageiconname}" alt="${vm.imagetype}" class="vm-image-icon me-3">
+                    <img src="/static/images/${vm.imageiconname}" alt="${vm.imagetype}" class="vm-image-icon me-3">
                     <div class="flex-grow-1">
                         <h5 class="card-title mb-1">${vm.hostname}</h5>
                         <p class="card-text mb-0"><small>${vm.ipaddress} | ${vm.cpu} CPU | ${vm.ram} MB RAM</small></p>
