@@ -6,6 +6,8 @@ import os
 import json
 import shutil
 import ssl
+import traceback
+from urllib.parse import urlparse
 import requests
 from werkzeug.security import generate_password_hash
 import yaml
@@ -909,6 +911,8 @@ def fetch_github_images_route():
     else:
         return jsonify({"success": False, "message": "No images found in any of the specified directories"})
 
+ALLOWED_DOMAINS = ["github.com", "raw.githubusercontent.com"]
+
 @blueprint.route('/install_github_image', methods=['POST'])
 @login_required
 @admin_required
@@ -920,24 +924,42 @@ def install_github_image():
     if not image_name or not download_url:
         return jsonify({"success": False, "message": "Missing image name or download URL"}), 400
 
-    # Check if the image is already installed
-    existing_image = VmImageModel.query.filter_by(image_folder_name=image_name).first()
-    if existing_image:
-        return jsonify({"success": False, "message": f"{image_name} is already installed"}), 400
-
-    # Download and install the image
-    response = requests.get(download_url)
-    if response.status_code != 200:
-        return jsonify({"success": False, "message": f"Failed to download image: {response.status_code}"}), 400
-
-    extract_path = os.path.join('apps', 'plugins', 'ansible-deploy-vm', 'tasks')
-
     try:
+        # SSRF protection
+        parsed_url = urlparse(download_url)
+        if parsed_url.hostname not in ALLOWED_DOMAINS:
+            return jsonify({"success": False, "message": "Invalid download URL"}), 400
+
+        # Check if the image is already installed
+        existing_image = VmImageModel.query.filter_by(image_folder_name=image_name).first()
+        if existing_image:
+            return jsonify({"success": False, "message": f"{image_name} is already installed"}), 400
+
+        # Download the image
+        response = requests.get(download_url)
+        if response.status_code != 200:
+            return jsonify({"success": False, "message": f"Failed to download image: {response.status_code}"}), 400
+
+        extract_path = os.path.join('apps', 'plugins', 'ansible-deploy-vm', 'tasks')
+        image_folder = os.path.join(extract_path, secure_filename(image_name))
+
+        # Ensure the directory exists
+        os.makedirs(image_folder, exist_ok=True)
+
+        # Path traversal protection and extraction
         with zipfile.ZipFile(io.BytesIO(response.content)) as zip_ref:
-            zip_ref.extractall(extract_path)
+            for file in zip_ref.namelist():
+                filename = os.path.basename(file)
+                if filename:  # Skip directories
+                    target_path = os.path.join(image_folder, filename)
+                    if os.path.abspath(target_path).startswith(os.path.abspath(image_folder)):
+                        with zip_ref.open(file) as source, open(target_path, "wb") as target:
+                            shutil.copyfileobj(source, target)
+                    else:
+                        return jsonify({"success": False, "message": "Invalid file path in zip"}), 400
 
         # Look for a settings.json file in the extracted directory
-        settings_path = os.path.join(extract_path, image_name, 'settings.json')
+        settings_path = os.path.join(image_folder, 'settings.json')
         if os.path.exists(settings_path):
             with open(settings_path, 'r') as settings_file:
                 settings = json.load(settings_file)
@@ -947,7 +969,7 @@ def install_github_image():
         # Create a new VmImageModel instance
         new_image = VmImageModel(
             image_template_name=settings.get('image_template_name', image_name),
-            image_folder_name=image_name,
+            image_folder_name=secure_filename(image_name),
             image_human_name=settings.get('image_human_name', image_name),
             image_type=settings.get('image_type', 'linux'),
             network_type=settings.get('network_type', 'non-domain'),
@@ -969,11 +991,12 @@ def install_github_image():
 
     except IntegrityError as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+        log_json('ERROR', 'Database error during image installation', error=traceback.format_exc())
+        return jsonify({"success": False, "message": "A database error occurred"}), 500
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
-
+        log_json('ERROR', 'An error occurred during image installation', error=traceback.format_exc())
+        return jsonify({"success": False, "message": "An internal error has occurred"}), 500
 
 @blueprint.route('/clear-history', methods=['POST'])
 @login_required

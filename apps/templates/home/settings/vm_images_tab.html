@@ -673,19 +673,23 @@
         container.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
         fetch("/fetch_github_images")
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     allImages = data.images; // Store all images
                     displayGithubImages(allImages);
                 } else {
-                    toastr.error("Failed to fetch GitHub images: " + data.message);
-                    container.innerHTML = '<div class="alert alert-danger">Failed to fetch GitHub images</div>';
+                    throw new Error(data.message || "Failed to fetch GitHub images");
                 }
             })
             .catch(error => {
                 console.error("Error fetching GitHub images:", error);
-                toastr.error("An error occurred while fetching GitHub images.");
+                toastr.error("An error occurred while fetching GitHub images: " + error.message);
                 container.innerHTML = '<div class="alert alert-danger">An error occurred while fetching GitHub images</div>';
             });
     }
