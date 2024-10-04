@@ -146,8 +146,11 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="pb-2 text-white"><i class="fas fa-code me-2"></i>Virtual Machine Images</h2>
             <div>
+                <button id="openGithubImagesBtn" class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#githubImagesModal">
+                    <i class="fas fa-download me-2"></i>Install Image
+                </button>
                 <button id="uploadZipBtn" class="btn btn-outline-light me-2">
-                    <i class="fas fa-upload me-2"></i>Upload Zip
+                    <i class="fas fa-upload me-2"></i>Upload Image Zip
                 </button>
                 <button id="scanImagesBtn" class="btn btn-primary">
                     <i class="fas fa-sync-alt me-2"></i>Scan Images
@@ -196,6 +199,32 @@
                             </button>
                             <button class="btn btn-sm btn-outline-info" onclick="loadPlaybook('{{ image.id }}')">
                                 <i class="fas fa-book me-1"></i>Playbook
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GitHub Images Modal -->
+            <div class="modal fade" id="githubImagesModal" tabindex="-1" aria-labelledby="githubImagesModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content bg-dark text-white">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="githubImagesModalLabel">Available Images</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="imageSearchInput" placeholder="Search images...">
+                            </div>
+                            <div id="githubImagesContainer" class="row g-4">
+                                <!-- GitHub images will be dynamically added here -->
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="fetchGithubImagesBtn" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i>Refresh Images
                             </button>
                         </div>
                     </div>
@@ -597,4 +626,143 @@
             toastr.error("An error occurred while modifying image.");
         });
     }
-    </script>
+    let allImages = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = document.getElementById('githubImagesModal');
+        const fetchBtn = document.getElementById('fetchGithubImagesBtn');
+        const searchInput = document.getElementById('imageSearchInput');
+
+        // Fetch images when the modal is opened
+        modal.addEventListener('show.bs.modal', fetchGithubImages);
+
+        // Fetch images when the refresh button is clicked
+        fetchBtn.addEventListener('click', fetchGithubImages);
+
+        // Add search functionality
+        if (searchInput) {
+            searchInput.addEventListener('input', filterImages);
+        }
+
+        // Add event listener for when the modal is hidden
+        modal.addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        });
+
+        // Add click event listener for the close button
+        const closeBtn = modal.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+            });
+        }
+
+        // Add click event listener for the "Close" button in the footer
+        const footerCloseBtn = modal.querySelector('.modal-footer .btn-secondary');
+        if (footerCloseBtn) {
+            footerCloseBtn.addEventListener('click', function() {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+            });
+        }
+    });
+
+    function fetchGithubImages() {
+        const container = document.getElementById("githubImagesContainer");
+        container.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+        fetch("/fetch_github_images")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    allImages = data.images; // Store all images
+                    displayGithubImages(allImages);
+                } else {
+                    throw new Error(data.message || "Failed to fetch GitHub images");
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching GitHub images:", error);
+                toastr.error("An error occurred while fetching GitHub images: " + error.message);
+                container.innerHTML = '<div class="alert alert-danger">An error occurred while fetching GitHub images</div>';
+            });
+    }
+
+    function filterImages() {
+        const searchTerm = document.getElementById('imageSearchInput').value.toLowerCase();
+        const filteredImages = allImages.filter(image => 
+            image.name.toLowerCase().includes(searchTerm) || 
+            image.type.toLowerCase().includes(searchTerm)
+        );
+        displayGithubImages(filteredImages);
+    }
+
+    function formatImageName(name, type) {
+        if (type === 'community') {
+            const parts = name.split('_');
+            let formatted = parts[parts.length - 1];
+            return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+        } else {
+            return name;
+        }
+    }
+
+    function displayGithubImages(images) {
+        const container = document.getElementById("githubImagesContainer");
+        container.innerHTML = "";
+        if (images.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No matching images found</div>';
+            return;
+        }
+        images.forEach(image => {
+            const displayName = formatImageName(image.name, image.type);
+            const card = document.createElement("div");
+            card.className = "col-md-6 col-lg-4 image-card";
+            card.innerHTML = `
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2 text-white">${displayName}</h5>
+                        <p class="card-subtitle mb-3 text-muted small">${image.name}</p>
+                        <p class="card-text text-muted flex-grow-1">Installable Image (${image.type})</p>
+                        ${image.is_installed 
+                            ? '<button class="btn btn-sm btn-secondary mt-3" disabled>Already Installed</button>'
+                            : `<button class="btn btn-sm btn-outline-primary mt-3" onclick="installGithubImage('${image.name}', '${image.download_url}')">
+                                <i class="fas fa-download me-2"></i>Install Image
+                            </button>`
+                        }
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function installGithubImage(imageName, downloadUrl) {
+        toastr.info(`Installing ${imageName}...`);
+        fetch("/install_github_image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: imageName, url: downloadUrl })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                toastr.success(`${imageName} installed successfully.`);
+                // Refresh the list of GitHub images
+                fetchGithubImages();
+            } else {
+                toastr.error(`Failed to install ${imageName}: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error(`Error installing ${imageName}:`, error);
+            toastr.error(`An error occurred while installing ${imageName}.`);
+        });
+    }
+</script>
