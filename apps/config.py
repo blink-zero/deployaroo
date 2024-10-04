@@ -4,11 +4,11 @@ import os
 class Config(object):
     # Secret key for cryptographic operations
     # Randomly generated key, replace with your own key if you are using this in production or Add Environment Variable
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'n73bbeWX2y_oWztEo5ilHyU7D3Im-hjwxgNUvxg1ccc='
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'default_secret_key'
 
     # Encryption key for cryptographic operations relating to password storage
     # Randomly generated key, replace with your own key if you are using this in production or add Environment Variable
-    ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY') or 'n73bbeWX2y_oWztEo5ilHyU7D3Im-hjwxgNUvxg1ccc='
+    ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY') or 'default_encryption_key'
     
     # Database URI, defaulting to SQLite if not provided
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///db.sqlite3'
