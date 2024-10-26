@@ -5,7 +5,7 @@ gunicorn==22.0.0
 flask_migrate==4.0.7
 flask_sqlalchemy==3.1.1
 sqlalchemy==2.0.16
-Werkzeug==3.0.3
+Werkzeug==3.0.6
 requests>=2.27.1
 pyvmomi==8.0.0.1.2
 ansible_runner==2.3.2
